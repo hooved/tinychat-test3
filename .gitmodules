@@ -1,0 +1,4 @@
+[submodule "tinygrad"]
+	path = tinygrad
+	url = https://github.com/hooved/tinygrad.git
+	branch = tinychat-browser
