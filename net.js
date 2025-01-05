@@ -1,5 +1,5 @@
 
-    window.MODEL_BASE_URL= "https://huggingface.co/hooved/llama-3-2-1B-f32/resolve/main";
+    window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/resolve/main";
 
   const getTensorBuffer = (safetensorParts, t) => {
     return safetensorParts[t.chunk].subarray(t.start_pos, t.start_pos + t.size)
