@@ -22,7 +22,7 @@ const r_4_8_16_28start_pos2B129_4 = `fn nan() -> f32 { let bits = 0xffffffffu; r
 
 */
 
-    window.MODEL_BASE_URL= ".";
+    window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/resolve/main";
 
   const getTensorBuffer = (safetensorParts, t) => {return safetensorParts[t.chunk].subarray(t.start_pos, t.start_pos + t.size)}
 
