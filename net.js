@@ -22,7 +22,7 @@ const r_4_8_16_28start_pos2B129_4 = `fn nan() -> f32 { let bits = 0xffffffffu; r
 
 */
 
-    window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/resolve/main";
+    window.MODEL_BASE_URL= ".";
 
   const getTensorBuffer = (safetensorParts, t) => {return safetensorParts[t.chunk].subarray(t.start_pos, t.start_pos + t.size)}
 
@@ -1232,6 +1232,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_18 = createEmptyBuf(device, 128);;
     const buf_19 = createEmptyBuf(device, 131200);;
     const buf_20 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.0.attention.wo.weight']));
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_21 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.0.ffn_norm.weight']));
     const buf_22 = createEmptyBuf(device, 32768);;
     const buf_23 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.0.feed_forward.w3.weight']));
@@ -1252,6 +1253,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_38 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.1.feed_forward.w3.weight']));
     const buf_39 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.1.feed_forward.w1.weight']));
     const buf_40 = createEmptyBuf(device, 8192);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_41 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.1.feed_forward.w2.weight']));
     const buf_42 = createEmptyBuf(device, 8192);;
     const buf_43 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.2.attention_norm.weight']));
@@ -1272,6 +1274,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_58 = createEmptyBuf(device, 2048);;
     const buf_59 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.3.attention.wk.weight']));
     const buf_60 = createEmptyBuf(device, 2048);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_61 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.3.attention.wv.weight']));
     const buf_62 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.3.attention.cache_kv']));
     const buf_63 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.3.attention.wq.weight']));
@@ -1292,6 +1295,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_78 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.4.attention.wo.weight']));
     const buf_79 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.4.ffn_norm.weight']));
     const buf_80 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.4.feed_forward.w3.weight']));
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_81 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.4.feed_forward.w1.weight']));
     const buf_82 = createEmptyBuf(device, 8192);;
     const buf_83 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.4.feed_forward.w2.weight']));
@@ -1312,6 +1316,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_98 = createEmptyBuf(device, 8192);;
     const buf_99 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.6.attention_norm.weight']));
     const buf_100 = createEmptyBuf(device, 2048);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_101 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.6.attention.wk.weight']));
     const buf_102 = createEmptyBuf(device, 2048);;
     const buf_103 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.6.attention.wv.weight']));
@@ -1332,6 +1337,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_118 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.7.attention.cache_kv']));
     const buf_119 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.7.attention.wq.weight']));
     const buf_120 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.7.attention.wo.weight']));
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_121 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.7.ffn_norm.weight']));
     const buf_122 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.7.feed_forward.w3.weight']));
     const buf_123 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.7.feed_forward.w1.weight']));
@@ -1352,6 +1358,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_138 = createEmptyBuf(device, 8192);;
     const buf_139 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.8.feed_forward.w2.weight']));
     const buf_140 = createEmptyBuf(device, 8192);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_141 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.9.attention_norm.weight']));
     const buf_142 = createEmptyBuf(device, 2048);;
     const buf_143 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.9.attention.wk.weight']));
@@ -1372,6 +1379,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_158 = createEmptyBuf(device, 2048);;
     const buf_159 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.10.attention.wv.weight']));
     const buf_160 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.10.attention.cache_kv']));
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_161 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.10.attention.wq.weight']));
     const buf_162 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.10.attention.wo.weight']));
     const buf_163 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.10.ffn_norm.weight']));
@@ -1392,6 +1400,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_178 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.11.feed_forward.w3.weight']));
     const buf_179 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.11.feed_forward.w1.weight']));
     const buf_180 = createEmptyBuf(device, 8192);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_181 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.11.feed_forward.w2.weight']));
     const buf_182 = createEmptyBuf(device, 8192);;
     const buf_183 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.12.attention_norm.weight']));
@@ -1412,6 +1421,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_198 = createEmptyBuf(device, 2048);;
     const buf_199 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.13.attention.wk.weight']));
     const buf_200 = createEmptyBuf(device, 2048);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_201 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.13.attention.wv.weight']));
     const buf_202 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.13.attention.cache_kv']));
     const buf_203 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.13.attention.wq.weight']));
@@ -1432,6 +1442,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_218 = createWeightBuf(device, 16777216, getTensorBuffer(safetensor, metadata['layers.14.attention.wo.weight']));
     const buf_219 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.14.ffn_norm.weight']));
     const buf_220 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.14.feed_forward.w3.weight']));
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_221 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.14.feed_forward.w1.weight']));
     const buf_222 = createEmptyBuf(device, 8192);;
     const buf_223 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.14.feed_forward.w2.weight']));
@@ -1451,6 +1462,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_237 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.15.ffn_norm.weight']));
     const buf_238 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.15.feed_forward.w3.weight']));
     const buf_239 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.15.feed_forward.w1.weight']));
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_240 = createEmptyBuf(device, 8192);;
     const buf_241 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.15.feed_forward.w2.weight']));
     const buf_242 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['norm.weight']));
@@ -1463,13 +1475,22 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_249 = createEmptyBuf(device, 2004);;
     const buf_250 = createEmptyBuf(device, 1024);;
     const output0 = createEmptyBuf(device, 4);;
+    await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
 
         const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
         const gpuWriteBuffer1 = device.createBuffer({size:4, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
         const gpuReadBuffer = device.createBuffer({ size: output0.size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
 
         const kernels = [r_64_16_8_16_501_4, r_2048_16_16, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, E_n8, r_128_4_8_256_4, E_n5, E_2_8_16_2_4, E_n6, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_8016_4_8_256_4, r_8_32_501, r_256, r_8_32_501n1, r_256n1, E_1336_32_3, r_167_16_3_16_64_4, r_167_3_501, r_8_32_501n2, r_256n2];
-        const piplines = await Promise.all(kernels.map(name => device.createComputePipelineAsync({layout: "auto", compute: { module: device.createShaderModule({ code: name }), entryPoint: "main" }})));
+        const piplines = [];
+        for (let i=0; i<kernels.length; i++) {
+          const name = kernels[i];
+          const pipeline = await device.createComputePipelineAsync({layout: "auto", compute: { module: device.createShaderModule({ code: name }), entryPoint: "main" }});
+          piplines.push(pipeline);
+          if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
+        }
+
+        //const piplines = await Promise.all(kernels.map(name => device.createComputePipelineAsync({layout: "auto", compute: { module: device.createShaderModule({ code: name }), entryPoint: "main" }})));
 
         return async (data0, start_pos_input) => {
             const commandEncoder = device.createCommandEncoder();
