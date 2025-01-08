@@ -12,29 +12,6 @@ const getDevice = async () => {
   });
 };
 
-// modified from examples/webgpu/stable_diffusion/index.html getProgressDlForPart
-const loadPart = async (part) => {
-    const response = await fetch(part);
-    // const contentLength = response.headers.get('content-length');
-    // const total = parseInt(contentLength, 10);
-
-    const res = new Response(new ReadableStream({
-        async start(controller) {
-            const reader = response.body.getReader();
-            for (;;) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                //progressCallback(part, value.byteLength, total);
-                controller.enqueue(value);
-            }
-                    
-            controller.close();
-        },
-    }));
-        
-    return res.arrayBuffer();
-};
-
 // copied from examples/webgpu/stable_diffusion/index.html 
 function initDb() {
   return new Promise((resolve, reject) => {
@@ -182,39 +159,45 @@ async function hashBuffer(bytes) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function dequantize(parent, decomp, BYTES_PER_CHUNK_IN, FLOATS_PER_CHUNK_OUT) {
+const getAndDecompressGGUFChunks = async (decomp, progress) => {
+  let totalLoaded = 0;
+  let totalSize = 0;
+  let partSize = {};
+  const bytesPerIteration = 430080;
 
-  if (parent.length % BYTES_PER_CHUNK_IN !== 0) {
-    throw new Error("Parent length must be a multiple of BYTES_PER_CHUNK_IN bytes.");
-  }
-  const numChunks = parent.length / BYTES_PER_CHUNK_IN;
-  const BYTES_PER_CHUNK_OUT = FLOATS_PER_CHUNK_OUT * 4;
-  const inputPtr = decomp._malloc(BYTES_PER_CHUNK_IN);
-  const outputPtr = decomp._malloc(BYTES_PER_CHUNK_OUT);
-  const inputView = new Uint8Array(decomp.HEAPU8.buffer, inputPtr, BYTES_PER_CHUNK_IN);
-  const outputViewF32 = new Float32Array(decomp.HEAPF32.buffer, outputPtr, FLOATS_PER_CHUNK_OUT);
-  const outputViewU8 = new Uint8Array(outputViewF32.buffer, outputViewF32.byteOffset, outputViewF32.byteLength);
-  const result = new Uint8Array(numChunks * BYTES_PER_CHUNK_OUT);
+  const progressCallback = (part, loaded, total, message) => {
+    totalLoaded += loaded;
 
-  for (let i = 0; i < numChunks; i++) {
-    const start = i * BYTES_PER_CHUNK_IN;
-    const end   = start + BYTES_PER_CHUNK_IN;
-    inputView.set(parent.subarray(start, end));
-    decomp._net(inputPtr, outputPtr);
-    const offset = i * BYTES_PER_CHUNK_OUT;
-    result.set(outputViewU8, offset);
+    if (!partSize[part]) {
+      totalSize += total;
+      partSize[part] = true;
+    }
+                
+    progress(totalLoaded, totalSize, message);
+  };
 
-    // prevent browser lag 
-    // TODO: use workers
-    if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 0));
-  }
-  decomp._free(inputPtr);
-  decomp._free(outputPtr);
+  // modified from examples/webgpu/stable_diffusion/index.html getProgressDlForPart
+  const loadPart = async (part, progressCallback) => {
+      const response = await fetch(part);
+      const contentLength = response.headers.get('content-length');
+      const total = parseInt(contentLength, 10);
 
-  return result;
-}
-
-const getAndDecompressGGUFChunks = async (decomp) => {
+      const res = new Response(new ReadableStream({
+          async start(controller) {
+              const reader = response.body.getReader();
+              for (;;) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  progressCallback(part, value.byteLength, total, "Downloading model:");
+                  controller.enqueue(value);
+              }
+                    
+              controller.close();
+          },
+      }));
+        
+      return res.arrayBuffer();
+  };
 
   const response = await fetch(`${window.MODEL_BASE_URL}/net_metadata.json`);
   // TODO: cache metadata
@@ -229,26 +212,30 @@ const getAndDecompressGGUFChunks = async (decomp) => {
 
     if (part) {
       console.log(`Cache hit: ${filename}, hash: ${hash}`);
+      totalLoaded += part.content.byteLength;
+      totalSize += part.content.byteLength;
+      progress(totalLoaded, totalSize, "Downloading model:")
       return Promise.resolve(part.content);
     } else {
       console.log(`Cache miss: ${filename}, hash: ${hash}`);
-      //return getProgressDlForPart(`${window.MODEL_BASE_URL}/${key}.safetensors`, progressCallback);
-      return loadPart(`${window.MODEL_BASE_URL}/${filename}`);
+      return loadPart(`${window.MODEL_BASE_URL}/${filename}`, progressCallback);
     }
   }
 
   const correctHashes = data.metadata.chunks.map(chunk => chunk.hash)
   const compressedBuffers = await Promise.all(data.metadata.chunks.map(chunk => getPart(chunk.name, chunk.hash)));
 
-  // delete unused cached buffers to free disk space
+  // delete unused cached buffers to free disk space -- if we update weights, user will otherwise have obsolete cached buffers
   const dbKeys = await getAllKeysFromDb(db);
   const correctHashesSet = new Set(correctHashes);
   const notInCorrectHashes = dbKeys.filter(key => !correctHashesSet.has(key));
   for (const hash of notInCorrectHashes) {deleteTensorFromDb(db, hash);}
 
-  // check integrity of buffers, replace invalid cached buffers
   for (let i = 0; i < compressedBuffers.length; i++) {
     compressedBuffers[i] = new Uint8Array(compressedBuffers[i]);
+    // check integrity of buffers, replace invalid cached buffers
+    // may not be necessary, and takes time
+    /*
     checked_hash = await hashBuffer(compressedBuffers[i]);
     if (checked_hash !== correctHashes[i]) {
       console.log(`Replacing invalid buffer with name: ${data.metadata.chunks[i].name}, expected hash: ${correctHashes[i]}, actual hash: ${checked_hash}`)
@@ -256,25 +243,62 @@ const getAndDecompressGGUFChunks = async (decomp) => {
       compressedBuffers[i] = await getPart(data.metadata.chunks[i].name, correctHashes[i]);
       compressedBuffers[i] = new Uint8Array(compressedBuffers[i]);
     }
+    */
     saveTensorToDb(db, correctHashes[i], compressedBuffers[i]);
   }
 
-  // TODO: encode netKeys in metadata
-  //const netKeys = ["net_part0", "net_part1", "net_part2"];
-  //console.log("Downloading compressed model weights")
-  //const compressedBuffers = await Promise.all(netKeys.map(key => getPart(key)));
-  console.log("Compressed model chunks loaded");
+  totalLoaded = 0;
+  totalSize = Object.values(state_dict).filter(item => item.dtype === "Q6_K").reduce((sum, item) => sum + item.size, 0) / bytesPerIteration;
+  const numCheckpoints = 100;
+  let nextCheckpoint = totalSize / numCheckpoints;
+  const decompProgressFraction = 0.90;
+  totalSize = totalSize / decompProgressFraction; // extend progress bar for minor steps after decompression
+
+  const dequantize = async(parent, decomp, BYTES_PER_CHUNK_IN, FLOATS_PER_CHUNK_OUT) => {
+    if (parent.length % BYTES_PER_CHUNK_IN !== 0) {
+      throw new Error("Parent length must be a multiple of BYTES_PER_CHUNK_IN bytes.");
+    }
+    const numChunks = parent.length / BYTES_PER_CHUNK_IN;
+    const BYTES_PER_CHUNK_OUT = FLOATS_PER_CHUNK_OUT * 4;
+    const inputPtr = decomp._malloc(BYTES_PER_CHUNK_IN);
+    const outputPtr = decomp._malloc(BYTES_PER_CHUNK_OUT);
+    const inputView = new Uint8Array(decomp.HEAPU8.buffer, inputPtr, BYTES_PER_CHUNK_IN);
+    const outputViewF32 = new Float32Array(decomp.HEAPF32.buffer, outputPtr, FLOATS_PER_CHUNK_OUT);
+    const outputViewU8 = new Uint8Array(outputViewF32.buffer, outputViewF32.byteOffset, outputViewF32.byteLength);
+    const result = new Uint8Array(numChunks * BYTES_PER_CHUNK_OUT);
+
+    for (let i = 0; i < numChunks; i++) {
+      const start = i * BYTES_PER_CHUNK_IN;
+      const end   = start + BYTES_PER_CHUNK_IN;
+      inputView.set(parent.subarray(start, end));
+      decomp._net(inputPtr, outputPtr);
+      const offset = i * BYTES_PER_CHUNK_OUT;
+      result.set(outputViewU8, offset);
+
+      totalLoaded += 1;
+      if (totalLoaded >= nextCheckpoint) {
+        progress(totalLoaded, totalSize, "Decompressing model:");
+        nextCheckpoint += totalSize * decompProgressFraction / numCheckpoints;
+      }
+
+      // prevent browser lag 
+      // TODO: use workers
+      if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    decomp._free(inputPtr);
+    decomp._free(outputPtr);
+
+    return result;
+  }
 
   for (const [k, v] of Object.entries(state_dict)) {
     v.bytes = compressedBuffers[v.chunk].subarray(v.start_pos, v.start_pos + v.size);
     if (v.dtype === "Q6_K") {
-      console.log(`decompressing ${k}`)
-      v.bytes = await dequantize(v.bytes, decomp, 430080, 524288);
+      v.bytes = await dequantize(v.bytes, decomp, bytesPerIteration, bytesPerIteration * 256 / 210);
       v.dtype = "float32";
       v.size = v.bytes.byteLength;
     }
   }
-  console.log("Decompression complete")
 
   // FFD bin packing
   const maxChunkSize = 1149173760; // byte size of float32 output.weight in llama-1B
@@ -294,7 +318,7 @@ const getAndDecompressGGUFChunks = async (decomp) => {
     }
     if (!placed) chunks.push([t]);
   }
-  console.log("binning complete");
+  progress(totalSize * 0.95, totalSize, "Decompressing model:");
 
   const decompressedBuffers = [];
   for (let i=0; i<chunks.length; i++) {
@@ -313,42 +337,68 @@ const getAndDecompressGGUFChunks = async (decomp) => {
     }
   }
 
-  console.log("chunking complete");
+  progress(totalSize * 1.0, totalSize, "Decompressing model:");
   return {chunks: decompressedBuffers, metadata: state_dict};
 };
 
 document.addEventListener("alpine:init", () => {
   Alpine.data("state", () => ({
+    // loadingMessage updates the user on page load progress, including weights download and decompression
+    // if loadingMessage is not '', then prompt box will be hidden: this is default behavior on page load
+    loadingMessage: 'Loading...',
     // model
     nets: {},
     tokenizer: null,
     max_context: 1024,
 
+    progress(loaded, total, message) {
+      const percentage = total ? Math.trunc((loaded / total) * 100) : 0;
+      document.querySelector('.progress').style.width = `${percentage}%`;
+      document.getElementById('progress-percentage').textContent = `${percentage}%`;
+      if (message) {
+        this.loadingMessage = message;
+        document.getElementById('loading-message').textContent = this.loadingMessage;
+      }
+    },
+
     async init() {
       try {
-        const q6k_to_f32 = await Module();
-        const tensorData = await getAndDecompressGGUFChunks(q6k_to_f32);
+        var q6k_to_f32 = await Module();
+      } catch (error) {this.progress(0, 100, "Error loading decompressor"); console.log(error); return;}
 
+      try {
+        var tensorData = await getAndDecompressGGUFChunks(q6k_to_f32, this.progress.bind(this));
+      } catch (error) {this.progress(0, 100, "Error decompressing model"); console.log(error); return;}
+
+      var p = 0;
+      try {
+        this.progress(p, 100, "Loading tokenizer:");
         const wasmResponse = await fetch(`${window.MODEL_BASE_URL}/tiktoken_bg.wasm`);
+        p = 10; this.progress(p, 100, "Loading tokenizer:");
         const wasmBytes = await wasmResponse.arrayBuffer();
         await window.tiktokenInit((imports) => WebAssembly.instantiate(wasmBytes, imports));
+        p = 20; this.progress(p, 100, "Loading tokenizer:");
 
-        //this.tokenizer = await createTokenizer("./llama3-2.tiktoken");
         this.tokenizer = await createTokenizer(`${window.MODEL_BASE_URL}/llama3-2.tiktoken`);
-        tokenizer_works = (new TextDecoder().decode(this.tokenizer.decode(this.tokenizer.encode("hello world"))) === "hello world");
+        const tokenizer_works = (new TextDecoder().decode(this.tokenizer.decode(this.tokenizer.encode("hello world"))) === "hello world");
         console.log("tokenizer works:", tokenizer_works)
+        p = 30; this.progress(p, 100, "Loading tokenizer:");
+      } catch (error) {this.progress(p, 100, "Error launching tokenizer"); console.log(error); return;}
 
-        const device = await getDevice();
-        console.log("WebGPU device initialized")
+      try {
+        var device = await getDevice();
+        console.log("WebGPU device initialized");
+        p = 40; this.progress(p, 100, "Launching WebGPU model:");
+      } catch (error) {this.progress(p, 100, "Error launching WebGPU"); console.log(error); return;}
 
+      try {
         let models = ["transformer"];
         this.nets = await Promise.all([
-                transformer().setup(device, tensorData.chunks, tensorData.metadata),
+                transformer().setup(device, tensorData.chunks, tensorData.metadata, this.progress.bind(this)),
             ]).then((loadedModels) => loadedModels.reduce((acc, model, index) => { acc[models[index]] = model; return acc; }, {}))
-        console.log("Transformer setup without exceptions");
-      } catch (error) {
-        console.error("Error initializing model:", error);
-      }
+        this.progress(100, 100, "Launching WebGPU model:");
+        this.loadingMessage = ""; // Triggers removal of loading bar, display of prompt box
+      } catch (error) {this.progress(p, 100, "Error launching model"); console.log(error); return;}
     },
 
     // current state

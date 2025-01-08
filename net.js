@@ -1202,7 +1202,7 @@ var<workgroup> temp0: array<i32, 256>;
 }`;
 
     return {
-      "setup": async (device, safetensor, metadata) => {
+      "setup": async (device, safetensor, metadata, progress) => {
 
         const buf_0 = createEmptyBuf(device, 2097152);;
     const buf_1 = createWeightBuf(device, 513024, getTensorBuffer(safetensor, metadata['tok_embeddings.arange']));
@@ -1316,6 +1316,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_98 = createEmptyBuf(device, 8192);;
     const buf_99 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['layers.6.attention_norm.weight']));
     const buf_100 = createEmptyBuf(device, 2048);;
+    progress(50, 100, "Launching WebGPU model:");
     await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_101 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.6.attention.wk.weight']));
     const buf_102 = createEmptyBuf(device, 2048);;
@@ -1421,6 +1422,7 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_198 = createEmptyBuf(device, 2048);;
     const buf_199 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.13.attention.wk.weight']));
     const buf_200 = createEmptyBuf(device, 2048);;
+    progress(60, 100, "Launching WebGPU model:");
     await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
     const buf_201 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.13.attention.wv.weight']));
     const buf_202 = createWeightBuf(device, 4194304, getTensorBuffer(safetensor, metadata['layers.13.attention.cache_kv']));
@@ -1480,6 +1482,7 @@ var<workgroup> temp0: array<i32, 256>;
         const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
         const gpuWriteBuffer1 = device.createBuffer({size:4, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
         const gpuReadBuffer = device.createBuffer({ size: output0.size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+    progress(70, 100, "Launching WebGPU model:");
 
         const kernels = [r_64_16_8_16_501_4, r_2048_16_16, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, r_128_4_8_256_4, E_2_8_16_2_4, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_32_4_8_256_4, r_32_4_8_256_4, E_4_8_16_2n1, E_n8, r_128_4_8_256_4, E_n5, E_2_8_16_2_4, E_n6, r_2_28start_pos2B129_4_8_8_4, r_32_28start_pos2B129, r_32_28start_pos2B129n1, E_28start_pos2B129_8_4, r_4_8_16_28start_pos2B129_4, r_128_4_8_256_4n1, r_256_8, E_16_32_4, r_512_4_8_256_4, r_512_4_8_256_4n1, r_128_4_8_1024_4, r_256_8, E_16_32_4, r_8016_4_8_256_4, r_8_32_501, r_256, r_8_32_501n1, r_256n1, E_1336_32_3, r_167_16_3_16_64_4, r_167_3_501, r_8_32_501n2, r_256n2];
         const piplines = [];
@@ -1488,6 +1491,8 @@ var<workgroup> temp0: array<i32, 256>;
           const pipeline = await device.createComputePipelineAsync({layout: "auto", compute: { module: device.createShaderModule({ code: name }), entryPoint: "main" }});
           piplines.push(pipeline);
           if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
+          if (i / kernels.length > 0.33) {progress(80, 100, "Launching WebGPU model:");}
+          if (i / kernels.length > 0.66) {progress(90, 100, "Launching WebGPU model:");}
         }
 
         //const piplines = await Promise.all(kernels.map(name => device.createComputePipelineAsync({layout: "auto", compute: { module: device.createShaderModule({ code: name }), entryPoint: "main" }})));
