@@ -1,3 +1,4 @@
+window.TINYCHAT_ROOT = "/tinychat-wgpu/";
 
 // copied from examples/webgpu/stable_diffusion/index.html
 const getDevice = async () => {
@@ -350,6 +351,7 @@ document.addEventListener("alpine:init", () => {
     nets: {},
     tokenizer: null,
     max_context: 1024,
+    lastSeenToks: [],
 
     progress(loaded, total, message) {
       const percentage = total ? Math.trunc((loaded / total) * 100) : 0;
@@ -362,6 +364,11 @@ document.addEventListener("alpine:init", () => {
     },
 
     async init() {
+      try {
+        var device = await getDevice();
+        console.log("WebGPU device initialized");
+      } catch (error) {this.progress(0, 100, "Failed to launch WebGPU. Please check if WebGPU is enabled and reload the page. || Loading:"); console.log(error); return;}
+
       try {
         var q6k_to_f32 = await Module();
       } catch (error) {this.progress(0, 100, "Error loading decompressor"); console.log(error); return;}
@@ -386,12 +393,7 @@ document.addEventListener("alpine:init", () => {
       } catch (error) {this.progress(p, 100, "Error launching tokenizer"); console.log(error); return;}
 
       try {
-        var device = await getDevice();
-        console.log("WebGPU device initialized");
         p = 40; this.progress(p, 100, "Launching WebGPU model:");
-      } catch (error) {this.progress(p, 100, "Error launching WebGPU"); console.log(error); return;}
-
-      try {
         let models = ["transformer"];
         this.nets = await Promise.all([
                 transformer().setup(device, tensorData.chunks, tensorData.metadata, this.progress.bind(this)),
@@ -439,7 +441,7 @@ document.addEventListener("alpine:init", () => {
       if (this.home === 0) this.home = 1;
 
       // ensure that going back in history will go back to home
-      window.history.pushState({}, "", "/");
+      window.history.pushState({}, "", window.TINYCHAT_ROOT || "/");
 
       // add message to list
       this.cstate.messages.push({ role: "user", content: value });
@@ -466,6 +468,8 @@ document.addEventListener("alpine:init", () => {
         }
 
         // add chunk to the last message
+        // TODO: handle errors with localStorage overflow
+        //   possible example: this.cstate.messages[...] was undefined when trying to prompt within an old cstate (chat session)
         this.cstate.messages[this.cstate.messages.length - 1].content += chunk;
 
         // calculate performance tracking
@@ -532,23 +536,32 @@ document.addEventListener("alpine:init", () => {
         tokens = tokens.concat(this.tokenizer.encodeMessage(message.role, message.content));
       }
       tokens = tokens.concat(this.tokenizer.encodeRole("assistant"));
-      let start_pos = 0
+      let startPos = 0
+      let prefillToks = tokens.slice(0, -1);
 
-      let prefill_toks = tokens.slice(0, -1);
+      // Skip the largest possible sequence of tokens already represented at the beginning of the model's kv caches
+      for (let i=0; i <= prefillToks.length; i++) {
+        startPos = i;
+        if (i == prefillToks.length) break;
+        if (i == this.lastSeenToks.length) break;
+        if (prefillToks[i] !== this.lastSeenToks[i]) break;
+      }
+      this.lastSeenToks = prefillToks;
+      prefillToks = prefillToks.slice(startPos);
 
-      // TODO: implement whole llama3.py prefill method, here we are missing the prompt skipping logic
-      for (const tok of prefill_toks) {
-        const out = await this.nets["transformer"](new Float32Array([[tok]]), start_pos);
-        start_pos += 1;
+      for (const tok of prefillToks) {
+        await this.nets["transformer"](new Float32Array([[tok]]), startPos);
+        startPos += 1;
       }
 
-      let last_tok = tokens[tokens.length - 1];
+      let lastTok = tokens[tokens.length - 1];
       while (true) {
-        const tok = await this.nets["transformer"](new Float32Array([[last_tok]]), start_pos);
-        start_pos += 1;
-        last_tok = tok[0];
-        if (this.tokenizer.stop_tokens.has(last_tok)) break;
-        yield new TextDecoder().decode(this.tokenizer.decode([last_tok]));
+        const tok = await this.nets["transformer"](new Float32Array([[lastTok]]), startPos);
+        this.lastSeenToks.push(lastTok); // lets us skip prefilling with these tokens at the next prompt in this chain
+        startPos += 1;
+        lastTok = tok[0];
+        if (this.tokenizer.stop_tokens.has(lastTok)) break;
+        yield new TextDecoder().decode(this.tokenizer.decode([lastTok]));
       }
     },
   }));
