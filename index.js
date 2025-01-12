@@ -160,11 +160,10 @@ async function hashBuffer(bytes) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-const getAndDecompressGGUFChunks = async (decomp, progress) => {
+const getAndDecompressGGUFChunks = async (device, progress) => {
   let totalLoaded = 0;
   let totalSize = 0;
   let partSize = {};
-  const bytesPerIteration = 430080;
 
   const progressCallback = (part, loaded, total, message) => {
     totalLoaded += loaded;
@@ -207,7 +206,6 @@ const getAndDecompressGGUFChunks = async (decomp, progress) => {
 
   let db = await initDb();
 
-  // TODO: add progress tracker
   const getPart = async(filename, hash) => {
     let part = await readTensorFromDb(db, hash);
 
@@ -234,72 +232,118 @@ const getAndDecompressGGUFChunks = async (decomp, progress) => {
 
   for (let i = 0; i < compressedBuffers.length; i++) {
     compressedBuffers[i] = new Uint8Array(compressedBuffers[i]);
-    // check integrity of buffers, replace invalid cached buffers
-    // may not be necessary, and takes time
-    /*
-    checked_hash = await hashBuffer(compressedBuffers[i]);
-    if (checked_hash !== correctHashes[i]) {
-      console.log(`Replacing invalid buffer with name: ${data.metadata.chunks[i].name}, expected hash: ${correctHashes[i]}, actual hash: ${checked_hash}`)
-      await deleteTensorFromDb(db, correctHashes[i]);
-      compressedBuffers[i] = await getPart(data.metadata.chunks[i].name, correctHashes[i]);
-      compressedBuffers[i] = new Uint8Array(compressedBuffers[i]);
-    }
-    */
     saveTensorToDb(db, correctHashes[i], compressedBuffers[i]);
   }
 
   totalLoaded = 0;
-  totalSize = Object.values(state_dict).filter(item => item.dtype === "Q6_K").reduce((sum, item) => sum + item.size, 0) / bytesPerIteration;
-  const numCheckpoints = 100;
+  totalSize = Object.values(state_dict).filter(item => item.dtype === "Q6_K").reduce((sum, item) => sum + item.size, 0);
+  const numCheckpoints = 90;
   let nextCheckpoint = totalSize / numCheckpoints;
   const decompProgressFraction = 0.90;
   totalSize = totalSize / decompProgressFraction; // extend progress bar for minor steps after decompression
 
-  const dequantize = async(parent, decomp, BYTES_PER_CHUNK_IN, FLOATS_PER_CHUNK_OUT) => {
-    if (parent.length % BYTES_PER_CHUNK_IN !== 0) {
-      throw new Error("Parent length must be a multiple of BYTES_PER_CHUNK_IN bytes.");
-    }
-    const numChunks = parent.length / BYTES_PER_CHUNK_IN;
-    const BYTES_PER_CHUNK_OUT = FLOATS_PER_CHUNK_OUT * 4;
-    const inputPtr = decomp._malloc(BYTES_PER_CHUNK_IN);
-    const outputPtr = decomp._malloc(BYTES_PER_CHUNK_OUT);
-    const inputView = new Uint8Array(decomp.HEAPU8.buffer, inputPtr, BYTES_PER_CHUNK_IN);
-    const outputViewF32 = new Float32Array(decomp.HEAPF32.buffer, outputPtr, FLOATS_PER_CHUNK_OUT);
-    const outputViewU8 = new Uint8Array(outputViewF32.buffer, outputViewF32.byteOffset, outputViewF32.byteLength);
-    const result = new Uint8Array(numChunks * BYTES_PER_CHUNK_OUT);
+  const inChunkSize = 3144960; // max size that tinygrad compiled without exceptions; divisible by 210
+  let inChunk = new Uint8Array(inChunkSize);
+  const byteFactor = 1 / 210 * 256 * 4;
+  let chunkContents = {};
 
-    for (let i = 0; i < numChunks; i++) {
-      const start = i * BYTES_PER_CHUNK_IN;
-      const end   = start + BYTES_PER_CHUNK_IN;
-      inputView.set(parent.subarray(start, end));
-      decomp._net(inputPtr, outputPtr);
-      const offset = i * BYTES_PER_CHUNK_OUT;
-      result.set(outputViewU8, offset);
+  // decompression time goes from 15sec to 10sec by scheduling GPU jobs like below
+  // TODO: can we get tinygrad to give us bigger kernels? currently throws exceptions when trying to compile them
+  const num_decomposers = 8;
 
-      totalLoaded += 1;
-      if (totalLoaded >= nextCheckpoint) {
-        progress(totalLoaded, totalSize, "Decompressing model:");
-        nextCheckpoint += totalSize * decompProgressFraction / numCheckpoints;
+  const t0 = performance.now();
+  const pipelinePool = await Promise.all(
+    Array
+      .from({ length: num_decomposers }, () => q6k_to_f32().setup(device))
+      .map(async (promise) => {
+        return {
+          pipeline: await promise,
+          busy: false
+        };
+      })
+  );
+
+  async function getFreePipeline() {
+    for (;;) {
+      const idx = pipelinePool.findIndex(obj => !obj.busy);
+      if (idx >= 0) {
+        pipelinePool[idx].busy = true;
+        return pipelinePool[idx].pipeline;
       }
-
-      // prevent browser lag 
-      // TODO: use workers
-      if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(r => setTimeout(r, 5));
     }
-    decomp._free(inputPtr);
-    decomp._free(outputPtr);
-
-    return result;
   }
+
+  function releasePipeline(pipeline) {
+    const obj = pipelinePool.find(obj => obj.pipeline === pipeline);
+    if (obj) obj.busy = false;
+  }
+
+  const dequantize = async(inChunk, chunkContents, decomp) => {
+    let outChunk = await decomp(inChunk);
+    outChunk = new Uint8Array(outChunk.buffer);
+    for (const [t, start_end_tOffset] of Object.entries(chunkContents)) {
+      const start = parseInt(start_end_tOffset[0] * byteFactor);
+      const end = parseInt(start_end_tOffset[1] * byteFactor);
+      const offset = parseInt(start_end_tOffset[2] * byteFactor);
+      state_dict[t].bytes.set(outChunk.subarray(start, end), offset)
+    }
+    totalLoaded += inChunkSize;
+    if (totalLoaded >= nextCheckpoint) {
+      nextCheckpoint += totalSize * decompProgressFraction / numCheckpoints;
+      progress(totalLoaded, totalSize, "Decompressing model:");
+    }
+  }
+
+  function scheduleDequantizeJob() {
+    const reserved_inChunk = inChunk;
+    const reserved_chunkContents = chunkContents;
+    freeSpace = inChunkSize;
+    inChunk = new Uint8Array(inChunkSize);
+    chunkContents = {};
+    return (async () => {
+      const d = await getFreePipeline();
+      await dequantize(reserved_inChunk, reserved_chunkContents, d);
+      releasePipeline(d);
+    })();
+  }
+
+  const gpuJobs = [];
+  let freeSpace = inChunkSize;
 
   for (const [k, v] of Object.entries(state_dict)) {
-    v.bytes = compressedBuffers[v.chunk].subarray(v.start_pos, v.start_pos + v.size);
+    const tensor = compressedBuffers[v.chunk].subarray(v.start_pos, v.start_pos + v.size);
+
     if (v.dtype === "Q6_K") {
-      v.bytes = await dequantize(v.bytes, decomp, bytesPerIteration, bytesPerIteration * 256 / 210);
+      v.size = parseInt(v.size * byteFactor);
       v.dtype = "float32";
-      v.size = v.bytes.byteLength;
-    }
+      v.bytes = new Uint8Array(v.size);
+
+      let tensor_cursor = 0;
+      while (tensor_cursor < tensor.byteLength) {
+        const inChunk_cursor = inChunkSize - freeSpace;
+        if (!(k in chunkContents)) {chunkContents[k] = [inChunk_cursor, inChunk_cursor, tensor_cursor]}
+
+        const end = Math.min(tensor_cursor + freeSpace, tensor.byteLength);
+        inChunk.set(tensor.subarray(tensor_cursor, end), inChunk_cursor);
+        freeSpace -= (end - tensor_cursor);
+        chunkContents[k][1] += (end - tensor_cursor);
+        tensor_cursor = end;
+
+        if (freeSpace === 0) {gpuJobs.push(scheduleDequantizeJob());}
+      }
+    } else {v.bytes = tensor;}
   }
+
+  if (freeSpace < inChunkSize) {
+    inChunk.set(new Uint8Array(freeSpace), inChunkSize - freeSpace); // pad last partial chunk with zeroes
+    gpuJobs.push(scheduleDequantizeJob());
+  }
+
+  await Promise.all(gpuJobs);
+
+  const t1 = performance.now();
+  console.log(`decompression elapsed seconds: ${(t1 - t0) / 1000}`)
 
   // FFD bin packing
   const maxChunkSize = 1149173760; // byte size of float32 output.weight in llama-1B
@@ -350,6 +394,7 @@ document.addEventListener("alpine:init", () => {
     // model
     nets: {},
     tokenizer: null,
+    // TODO: implement context sliding; model currently outputs gibberish past max_context
     max_context: 1024,
     lastSeenToks: [],
 
@@ -370,11 +415,9 @@ document.addEventListener("alpine:init", () => {
       } catch (error) {this.progress(0, 100, "Failed to launch WebGPU. Please check if WebGPU is enabled and reload the page. || Loading:"); console.log(error); return;}
 
       try {
-        var q6k_to_f32 = await Module();
-      } catch (error) {this.progress(0, 100, "Error loading decompressor"); console.log(error); return;}
-
-      try {
-        var tensorData = await getAndDecompressGGUFChunks(q6k_to_f32, this.progress.bind(this));
+        //const decomp = await q6k_to_f32().setup(device);
+        //var tensorData = await getAndDecompressGGUFChunks(decomp, this.progress.bind(this));
+        var tensorData = await getAndDecompressGGUFChunks(device, this.progress.bind(this));
       } catch (error) {this.progress(0, 100, "Error decompressing model"); console.log(error); return;}
 
       var p = 0;
@@ -437,6 +480,7 @@ document.addEventListener("alpine:init", () => {
       if (!value) return;
 
       if (this.generating) return;
+      // TODO: fix bug: if we switch to another chat session during generation, prompt bar locks up with "Generating..."
       this.generating = true;
       if (this.home === 0) this.home = 1;
 

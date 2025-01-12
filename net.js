@@ -1829,4 +1829,284 @@ commandEncoder.copyBufferToBuffer(gpuWriteBuffer1, 0, start_pos, 0, gpuWriteBuff
       }
     }
   }
+
+    var q6k_to_f32 = function() {
+
+    const E_156_32_3 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<f32>;
+@group(0) @binding(1)var<storage,read_write>data1:array<atomic<u32>>;
+@compute @workgroup_size(32) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var gidx0 = i32(gindex.x); /* 156 */
+  var lidx0 = i32(lindex.x); /* 32 */
+  var alu0 = ((gidx0*20160)+(lidx0*630));
+  var alu1 = (alu0+208);
+  var alu2 = (alu0+209);
+  var alu3 = (alu0+418);
+  var alu4 = (alu0+419);
+  var alu5 = (alu0+628);
+  var alu6 = (alu0+629);
+  var val0 = atomicLoad(&data1[(alu1>>2)]);
+  var val1 = atomicLoad(&data1[(alu2>>2)]);
+  var val2 = atomicLoad(&data1[(alu3>>2)]);
+  var val3 = atomicLoad(&data1[(alu4>>2)]);
+  var val4 = atomicLoad(&data1[(alu5>>2)]);
+  var val5 = atomicLoad(&data1[(alu6>>2)]);
+  var alu7 = ((gidx0*96)+(lidx0*3));
+  var alu8 = ((u32((u32(((val0>>(((u32(alu1))&3u)<<3u))&255u)))))+((u32((u32(((val1>>(((u32(alu2))&3u)<<3u))&255u)))))<<8u));
+  var cast0 = (f32((alu8&1023u)));
+  var alu9 = (alu8&65535u);
+  var alu10 = ((u32((u32(((val2>>(((u32(alu3))&3u)<<3u))&255u)))))+((u32((u32(((val3>>(((u32(alu4))&3u)<<3u))&255u)))))<<8u));
+  var cast1 = (f32((alu10&1023u)));
+  var alu11 = (alu10&65535u);
+  var alu12 = ((u32((u32(((val4>>(((u32(alu5))&3u)<<3u))&255u)))))+((u32((u32(((val5>>(((u32(alu6))&3u)<<3u))&255u)))))<<8u));
+  var cast2 = (f32((alu12&1023u)));
+  var alu13 = (alu12&65535u);
+  var cast3 = (f32(((alu9>>10u)&31u)));
+  var cast4 = (f32(((alu11>>10u)&31u)));
+  var cast5 = (f32(((alu13>>10u)&31u)));
+  data0[alu7] = (select((cast0*5.960464477539063e-08f),(exp2((cast3+-15.0f))*((cast0*0.0009765625f)+1.0f)),(bool(cast3)))*select(1.0f,-1.0f,(bool((f32(((alu9>>15u)&1u)))))));
+  data0[(alu7+1)] = (select((cast1*5.960464477539063e-08f),(exp2((cast4+-15.0f))*((cast1*0.0009765625f)+1.0f)),(bool(cast4)))*select(1.0f,-1.0f,(bool((f32(((alu11>>15u)&1u)))))));
+  data0[(alu7+2)] = (select((cast2*5.960464477539063e-08f),(exp2((cast5+-15.0f))*((cast2*0.0009765625f)+1.0f)),(bool(cast5)))*select(1.0f,-1.0f,(bool((f32(((alu13>>15u)&1u)))))));
+}`;
+
+const E_156_32_3n1 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<f32>;
+@group(0) @binding(1)var<storage,read_write>data1:array<atomic<u32>>;
+@compute @workgroup_size(32) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var gidx0 = i32(gindex.x); /* 156 */
+  var lidx0 = i32(lindex.x); /* 32 */
+  var alu0 = ((gidx0*20160)+(lidx0*630));
+  var alu1 = (alu0+208);
+  var alu2 = (alu0+209);
+  var alu3 = (alu0+418);
+  var alu4 = (alu0+419);
+  var alu5 = (alu0+628);
+  var alu6 = (alu0+629);
+  var val0 = atomicLoad(&data1[(alu1>>2)]);
+  var val1 = atomicLoad(&data1[(alu2>>2)]);
+  var val2 = atomicLoad(&data1[(alu3>>2)]);
+  var val3 = atomicLoad(&data1[(alu4>>2)]);
+  var val4 = atomicLoad(&data1[(alu5>>2)]);
+  var val5 = atomicLoad(&data1[(alu6>>2)]);
+  var alu7 = ((gidx0*96)+(lidx0*3));
+  var alu8 = ((u32((u32(((val0>>(((u32(alu1))&3u)<<3u))&255u)))))+((u32((u32(((val1>>(((u32(alu2))&3u)<<3u))&255u)))))<<8u));
+  var alu9 = ((u32((u32(((val2>>(((u32(alu3))&3u)<<3u))&255u)))))+((u32((u32(((val3>>(((u32(alu4))&3u)<<3u))&255u)))))<<8u));
+  var alu10 = ((u32((u32(((val4>>(((u32(alu5))&3u)<<3u))&255u)))))+((u32((u32(((val5>>(((u32(alu6))&3u)<<3u))&255u)))))<<8u));
+  var cast0 = (f32(((alu8>>16u)&1023u)));
+  var cast1 = (f32(((alu8>>26u)&31u)));
+  var cast2 = (f32(((alu9>>16u)&1023u)));
+  var cast3 = (f32(((alu9>>26u)&31u)));
+  var cast4 = (f32(((alu10>>16u)&1023u)));
+  var cast5 = (f32(((alu10>>26u)&31u)));
+  data0[alu7] = (select((cast0*5.960464477539063e-08f),(exp2((cast1+-15.0f))*((cast0*0.0009765625f)+1.0f)),(bool(cast1)))*select(1.0f,-1.0f,(bool((f32(((alu8>>31u)&1u)))))));
+  data0[(alu7+1)] = (select((cast2*5.960464477539063e-08f),(exp2((cast3+-15.0f))*((cast2*0.0009765625f)+1.0f)),(bool(cast3)))*select(1.0f,-1.0f,(bool((f32(((alu9>>31u)&1u)))))));
+  data0[(alu7+2)] = (select((cast4*5.960464477539063e-08f),(exp2((cast5+-15.0f))*((cast4*0.0009765625f)+1.0f)),(bool(cast5)))*select(1.0f,-1.0f,(bool((f32(((alu10>>31u)&1u)))))));
+}`;
+
+const E_2 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<atomic<u32>>;
+@compute @workgroup_size(1) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var val0 = atomicLoad(&data0[0]);
+  atomicAnd(&data0[0],4294902015u);
+  atomicAdd(&data0[0],4096u);
+  atomicAnd(&data0[0],4294967040u);
+  atomicAdd(&data0[0],1u);
+}`;
+
+const E_4 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<atomic<u32>>;
+@compute @workgroup_size(1) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var val0 = atomicLoad(&data0[0]);
+  atomicAnd(&data0[0],16777215u);
+  atomicAdd(&data0[0],1073741824u);
+  atomicAnd(&data0[0],4278255615u);
+  atomicAdd(&data0[0],1048576u);
+  atomicAnd(&data0[0],4294902015u);
+  atomicAdd(&data0[0],1024u);
+  atomicAnd(&data0[0],4294967040u);
+  atomicAdd(&data0[0],1u);
+}`;
+
+const E_468_32_4_4 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<atomic<u32>>;
+@group(0) @binding(1)var<storage,read_write>data1:array<atomic<u32>>;
+@compute @workgroup_size(32,4) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var gidx0 = i32(gindex.x); /* 468 */
+  var lidx0 = i32(lindex.x); /* 32 */
+  var lidx1 = i32(lindex.y); /* 4 */
+  var alu0 = (lidx1<<2);
+  var alu1 = ((gidx0*6720)+(lidx0*210)+alu0);
+  var alu2 = (alu1+192);
+  var alu3 = (alu1+193);
+  var alu4 = (alu1+194);
+  var alu5 = (alu1+195);
+  var alu6 = ((gidx0<<9)+(lidx0<<4)+alu0);
+  var alu7 = (alu6+1);
+  var alu8 = (alu6+2);
+  var alu9 = (alu6+3);
+  var val0 = atomicLoad(&data1[(alu2>>2)]);
+  var val1 = atomicLoad(&data1[(alu3>>2)]);
+  var val2 = atomicLoad(&data1[(alu4>>2)]);
+  var val3 = atomicLoad(&data1[(alu5>>2)]);
+  var val4 = atomicLoad(&data0[(alu7>>2)]);
+  var val5 = atomicLoad(&data0[(alu8>>2)]);
+  var val6 = atomicLoad(&data0[(alu9>>2)]);
+  var val7 = atomicLoad(&data0[(alu6>>2)]);
+  var alu10 = (((u32(alu7))&3u)<<3u);
+  var alu11 = (((u32(alu8))&3u)<<3u);
+  var alu12 = (((u32(alu9))&3u)<<3u);
+  var alu13 = (((u32(alu6))&3u)<<3u);
+  var precast0 = (u32(((val0>>(((u32(alu2))&3u)<<3u))&255u)));
+  atomicAnd(&data0[(alu6>>2)],((255u<<alu13)^4294967295u));
+  atomicAdd(&data0[(alu6>>2)],((u32((bitcast<i32>(precast0&0xFF)&(i32(255)))))<<alu13));
+  var precast1 = (u32(((val1>>(((u32(alu3))&3u)<<3u))&255u)));
+  atomicAnd(&data0[(alu7>>2)],((255u<<alu10)^4294967295u));
+  atomicAdd(&data0[(alu7>>2)],((u32((bitcast<i32>(precast1&0xFF)&(i32(255)))))<<alu10));
+  var precast2 = (u32(((val2>>(((u32(alu4))&3u)<<3u))&255u)));
+  atomicAnd(&data0[(alu8>>2)],((255u<<alu11)^4294967295u));
+  atomicAdd(&data0[(alu8>>2)],((u32((bitcast<i32>(precast2&0xFF)&(i32(255)))))<<alu11));
+  var precast3 = (u32(((val3>>(((u32(alu5))&3u)<<3u))&255u)));
+  atomicAnd(&data0[(alu9>>2)],((255u<<alu12)^4294967295u));
+  atomicAdd(&data0[(alu9>>2)],((u32((bitcast<i32>(precast3&0xFF)&(i32(255)))))<<alu12));
+}`;
+
+const E_468_32_2 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<f32>;
+@group(0) @binding(1)var<storage,read_write>data1:array<f32>;
+@group(0) @binding(2)var<storage,read_write>data2:array<f32>;
+@compute @workgroup_size(32) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var gidx0 = i32(gindex.x); /* 468 */
+  var lidx0 = i32(lindex.x); /* 32 */
+  var alu0 = (lidx0+(gidx0<<5));
+  var val0 = data1[alu0];
+  var val1 = data2[alu0];
+  var alu1 = ((gidx0<<6)+(lidx0<<1));
+  data0[alu1] = val0;
+  data0[(alu1+1)] = val1;
+}`;
+
+const E_1872_4_8_16_4 = `fn nan() -> f32 { let bits = 0xffffffffu; return bitcast<f32>(bits); }
+fn is_nan(v:f32) -> bool { return min(v, 1.0) == 1.0 && max(v, -1.0) == -1.0; }
+
+fn inf(a: f32) -> f32 { return a/0.0; }
+@group(0) @binding(0)var<storage,read_write>data0:array<f32>;
+@group(0) @binding(1)var<storage,read_write>data1:array<f32>;
+@group(0) @binding(2)var<storage,read_write>data2:array<atomic<u32>>;
+@group(0) @binding(3)var<storage,read_write>data3:array<atomic<u32>>;
+@group(0) @binding(4)var<storage,read_write>data4:array<atomic<u32>>;
+@group(0) @binding(5)var<storage,read_write>data5:array<atomic<u32>>;
+@compute @workgroup_size(8,16) fn main(@builtin(workgroup_id) gindex: vec3<u32>,@builtin(local_invocation_id) lindex: vec3<u32>) {
+  var gidx0 = i32(gindex.x); /* 4 */
+  var gidx1 = i32(gindex.y); /* 1872 */
+  var lidx0 = i32(lindex.x); /* 8 */
+  var lidx1 = i32(lindex.y); /* 16 */
+  var alu0 = ((gidx1*1680)+(lidx0*210));
+  var val0 = data1[((gidx1<<4)+(lidx0<<1))];
+  var alu1 = (lidx1<<2);
+  var alu2 = (gidx0>>1);
+  var alu3 = (alu0+(alu2<<6)+alu1);
+  var alu4 = (alu3+1);
+  var alu5 = (alu3+2);
+  var alu6 = (alu3+3);
+  var alu7 = ((gidx0<<2)+(gidx1<<7)+(lidx0<<4)+(lidx1>>2));
+  var val1 = atomicLoad(&data2[(alu4>>2)]);
+  var val2 = atomicLoad(&data2[(alu5>>2)]);
+  var val3 = atomicLoad(&data2[(alu6>>2)]);
+  var val4 = atomicLoad(&data2[(alu3>>2)]);
+  var val5 = atomicLoad(&data5[(alu7>>2)]);
+  var alu8 = (gidx0&1);
+  var val6 = atomicLoad(&data3[(alu8>>2)]);
+  var alu9 = (alu0+(alu2<<5)+((lidx1&7)<<2));
+  var alu10 = (alu9+128);
+  var alu11 = (alu9+129);
+  var alu12 = (alu9+130);
+  var alu13 = (alu9+131);
+  var val7 = atomicLoad(&data2[(alu10>>2)]);
+  var val8 = atomicLoad(&data2[(alu11>>2)]);
+  var val9 = atomicLoad(&data2[(alu12>>2)]);
+  var val10 = atomicLoad(&data2[(alu13>>2)]);
+  var alu14 = (((gidx0<<1)+(lidx1>>3))&3);
+  var val11 = atomicLoad(&data4[(alu14>>2)]);
+  var alu15 = ((gidx0<<6)+(gidx1<<11)+(lidx0<<8)+alu1);
+  var alu16 = ((val5>>(((u32(alu7))&3u)<<3u))&255u);
+  var precast0 = alu16;
+  var cast0 = (u32(((val6>>(((u32(alu8))&3u)<<3u))&255u)));
+  var cast1 = (u32(((val11>>(((u32(alu14))&3u)<<3u))&255u)));
+  var precast1 = (((((u32(((val7>>(((u32(alu10))&3u)<<3u))&255u)))/cast1)&3u)<<4u)|(((u32(((val4>>(((u32(alu3))&3u)<<3u))&255u)))/cast0)&15u));
+  var precast2 = (((((u32(((val8>>(((u32(alu11))&3u)<<3u))&255u)))/cast1)&3u)<<4u)|(((u32(((val1>>(((u32(alu4))&3u)<<3u))&255u)))/cast0)&15u));
+  var precast3 = (((((u32(((val9>>(((u32(alu12))&3u)<<3u))&255u)))/cast1)&3u)<<4u)|(((u32(((val2>>(((u32(alu5))&3u)<<3u))&255u)))/cast0)&15u));
+  var precast4 = (((((u32(((val10>>(((u32(alu13))&3u)<<3u))&255u)))/cast1)&3u)<<4u)|(((u32(((val3>>(((u32(alu6))&3u)<<3u))&255u)))/cast0)&15u));
+  var precast5 = (select(0u,4294967040u,(0u<(alu16>>7u)))|bitcast<u32>(precast0));
+  var cast2 = (f32((i32(bitcast<i32>(precast5)))));
+  data0[alu15] = (cast2*(f32((bitcast<i32>(precast1&0xFF)+(i32(-32)))))*val0);
+  data0[(alu15+1)] = (cast2*(f32((bitcast<i32>(precast2&0xFF)+(i32(-32)))))*val0);
+  data0[(alu15+2)] = (cast2*(f32((bitcast<i32>(precast3&0xFF)+(i32(-32)))))*val0);
+  data0[(alu15+3)] = (cast2*(f32((bitcast<i32>(precast4&0xFF)+(i32(-32)))))*val0);
+}`;
+
+    return {
+      "setup": async (device) => {
+
+        const buf_0 = createEmptyBuf(device, 59904);;
+    const input0 = createEmptyBuf(device, 3144960);;
+    const buf_1 = createEmptyBuf(device, 59904);;
+    //const buf_2 = createEmptyBuf(device, 2);; fixed below
+    const buf_2 = createEmptyBuf(device, 4);;
+    const buf_3 = createEmptyBuf(device, 4);;
+    const buf_4 = createEmptyBuf(device, 239616);;
+    const buf_5 = createEmptyBuf(device, 119808);;
+    const output0 = createEmptyBuf(device, 15335424);;
+
+        const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
+        const gpuReadBuffer = device.createBuffer({ size: output0.size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+
+        const kernels = [E_156_32_3, E_156_32_3n1, E_2, E_4, E_468_32_4_4, E_468_32_2, E_1872_4_8_16_4];
+        const piplines = await Promise.all(kernels.map(name => device.createComputePipelineAsync({layout: "auto", compute: { module: device.createShaderModule({ code: name }), entryPoint: "main" }})));
+
+        return async (data0) => {
+            const commandEncoder = device.createCommandEncoder();
+
+            await gpuWriteBuffer0.mapAsync(GPUMapMode.WRITE);
+    new Uint8Array(gpuWriteBuffer0.getMappedRange()).set(data0);
+    gpuWriteBuffer0.unmap();
+commandEncoder.copyBufferToBuffer(gpuWriteBuffer0, 0, input0, 0, gpuWriteBuffer0.size);
+
+            addComputePass(device, commandEncoder, piplines[0], [buf_0, input0], [156, 1, 1]);
+        addComputePass(device, commandEncoder, piplines[1], [buf_1, input0], [156, 1, 1]);
+        addComputePass(device, commandEncoder, piplines[2], [buf_2], [1, 1, 1]);
+        addComputePass(device, commandEncoder, piplines[3], [buf_3], [1, 1, 1]);
+        addComputePass(device, commandEncoder, piplines[4], [buf_4, input0], [468, 1, 1]);
+        addComputePass(device, commandEncoder, piplines[5], [buf_5, buf_0, buf_1], [468, 1, 1]);
+        addComputePass(device, commandEncoder, piplines[6], [output0, buf_5, input0, buf_2, buf_3, buf_4], [4, 1872, 1]);
+            commandEncoder.copyBufferToBuffer(output0, 0, gpuReadBuffer, 0, output0.size);
+            const gpuCommands = commandEncoder.finish();
+            device.queue.submit([gpuCommands]);
+
+            await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+            const resultBuffer = new Float32Array(gpuReadBuffer.size/4);
+            resultBuffer.set(new Float32Array(gpuReadBuffer.getMappedRange()));
+            gpuReadBuffer.unmap();
+            return resultBuffer;
+        }
+      }
+    }
+  }
   
