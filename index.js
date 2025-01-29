@@ -3,6 +3,7 @@ window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/
 const queryParams = new URLSearchParams(window.location.search);
 const normalizedParams = Object.fromEntries([...queryParams].map(([key, value]) => [key.toUpperCase(), value.toUpperCase()]));
 window.BACKEND = (normalizedParams["BACKEND"] === "WASM") ? "WASM" : "WebGPU";
+window.TEST = normalizedParams["TEST"];
 
 const tiktokenReady = (async () => {
   const { init, get_encoding, Tiktoken, load } = await import('./tiktoken.js');
@@ -530,85 +531,97 @@ document.addEventListener("alpine:init", () => {
       } catch (error) {var maxGpuBuffer = null;}
       this.progress(0,100, `avail storage: ${storage.quota}, used: ${storage.usage}, maxgpubuffer: ${maxGpuBuffer}`);
 
-async function testBufferAllocation(device, totalSize) {
-        console.log(`🚀 Attempting to allocate ${totalSize / (1024 * 1024)} MB in GPU memory...`);
+      function blockThread(milliseconds) {
+        const start = Date.now();
+        while (Date.now() - start < milliseconds) {
+          // Busy-wait (do nothing)
+        }
+      }
 
-        // ✅ Step 1: Allocate the large GPU buffer (storage only)
-        let buffer = device.createBuffer({
-            size: totalSize,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST, // No MAP_READ!
-        });
+      if (window.TEST === "GPU_MEMORY") {
+        async function testBufferAllocation(device, totalSize) {
+          console.log(`🚀 Attempting to allocate ${totalSize / (1024 * 1024)} MB in GPU memory...`);
 
-        if (!buffer) {
-            console.error("❌ GPU Buffer allocation failed: Buffer object is null.");
-            return null;
+          // ✅ Step 1: Allocate the large GPU buffer (storage only)
+          let buffer = device.createBuffer({
+              size: totalSize,
+              usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST, // No MAP_READ!
+          });
+
+          if (!buffer) {
+              console.error("❌ GPU Buffer allocation failed: Buffer object is null.");
+              return null;
+          }
+
+          // ✅ Step 2: Allocate a small validation buffer (for reading back data)
+          let validationBuffer = device.createBuffer({
+              size: 4,
+              usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST, // Only allowed flags
+          });
+
+          if (!validationBuffer) {
+              console.error("❌ Validation buffer allocation failed.");
+              return null;
+          }
+
+          // ✅ Step 3: Write test data to the GPU buffer
+          const testData = new Uint32Array([0xDEADBEEF]); // Test pattern
+          device.queue.writeBuffer(buffer, 0, testData);
+
+          // ✅ Step 4: Copy a small part of the buffer to validationBuffer (triggers allocation)
+          let encoder = device.createCommandEncoder();
+          encoder.copyBufferToBuffer(buffer, 0, validationBuffer, 0, 4);
+          device.queue.submit([encoder.finish()]); // Submitting forces execution
+
+          // ✅ Step 5: Read back the value
+          await validationBuffer.mapAsync(GPUMapMode.READ);
+          const arrayBuffer = validationBuffer.getMappedRange();
+          const result = new Uint32Array(arrayBuffer);
+
+          // ✅ Step 6: Validate allocation
+          if (result[0] === 0xDEADBEEF) {
+              console.log(`✅ Successfully allocated and verified ${totalSize / (1024 * 1024)} MB GPU buffer.`);
+              validationBuffer.unmap();
+              return buffer;
+          } else {
+              //console.error(`❌ Allocation test failed! GPU buffer ${totalSize / (1024 * 1024)} MB may not be valid.`);
+              throw new Error(`❌ Allocation test failed! GPU buffer ${totalSize / (1024 * 1024)} MB may not be valid.`);
+              validationBuffer.unmap();
+              return null;
+          }
         }
 
-        // ✅ Step 2: Allocate a small validation buffer (for reading back data)
-        let validationBuffer = device.createBuffer({
-            size: 4,
-            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST, // Only allowed flags
-        });
-
-        if (!validationBuffer) {
-            console.error("❌ Validation buffer allocation failed.");
-            return null;
+        async function testGPUAllocation(size, device) {
+            let bufferSize = size * 1024 * 1024; // 1024MB (1GB) GPU buffer test
+            let buffer = await testBufferAllocation(device, bufferSize);
+            if (!buffer) {
+                console.log("⚠️ Buffer allocation was silently rejected by WebGPU!");
+            }
         }
 
-        // ✅ Step 3: Write test data to the GPU buffer
-        const testData = new Uint32Array([0xDEADBEEF]); // Test pattern
-        device.queue.writeBuffer(buffer, 0, testData);
-
-        // ✅ Step 4: Copy a small part of the buffer to validationBuffer (triggers allocation)
-        let encoder = device.createCommandEncoder();
-        encoder.copyBufferToBuffer(buffer, 0, validationBuffer, 0, 4);
-        device.queue.submit([encoder.finish()]); // Submitting forces execution
-
-        // ✅ Step 5: Read back the value
-        await validationBuffer.mapAsync(GPUMapMode.READ);
-        const arrayBuffer = validationBuffer.getMappedRange();
-        const result = new Uint32Array(arrayBuffer);
-
-        // ✅ Step 6: Validate allocation
-        if (result[0] === 0xDEADBEEF) {
-            console.log(`✅ Successfully allocated and verified ${totalSize / (1024 * 1024)} MB GPU buffer.`);
-            validationBuffer.unmap();
-            return buffer;
-        } else {
-            //console.error(`❌ Allocation test failed! GPU buffer ${totalSize / (1024 * 1024)} MB may not be valid.`);
-            throw new Error(`❌ Allocation test failed! GPU buffer ${totalSize / (1024 * 1024)} MB may not be valid.`);
-            validationBuffer.unmap();
-            return null;
+        let tot = 0;
+        let allocs = [128, 256, 512, 1024, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256];
+        for (const s of allocs) {
+          blockThread(500);
+          await testGPUAllocation(s, device);
+          tot += s;
+          this.progress(0,100, `${tot} MB allocated to gpu`);
         }
-}
-
-// Usage
-async function testGPUAllocation(size, device) {
-    let bufferSize = size * 1024 * 1024; // 1024MB (1GB) GPU buffer test
-    let buffer = await testBufferAllocation(device, bufferSize);
-    if (!buffer) {
-        console.log("⚠️ Buffer allocation was silently rejected by WebGPU!");
-    }
-}
-
-function blockThread(milliseconds) {
-  const start = Date.now();
-  while (Date.now() - start < milliseconds) {
-    // Busy-wait (do nothing)
-  }
-}
-
-    let tot = 0;
-    let allocs = [128, 256, 512, 1024, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256];
-    for (const s of allocs) {
-      blockThread(500);
-      await testGPUAllocation(s, device);
-      tot += s;
-      this.progress(0,100, `${tot} MB allocated to gpu`);
-      
-    }
-
-      return;
+        this.progress(0,100, `${tot} MB allocated to gpu, done allocating`);
+        return;
+      }
+      else if (window.TEST === "BROWSER_MEMORY") {
+        const largest = 4096;
+        for (let size = 8; size <= largest; size += 8) {
+          let sizeBytes = 8 * 1024 * 1024;
+          let buffer = new Uint8Array(sizeBytes);
+          this.progress(0,100, `${size} MB allocated in browser`);
+          await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
+          blockThread(500);
+        }
+        this.progress(0,100, `${largest} MB allocated in browser, done allocating`);
+        return;
+      }
 
       try {
         var tensorData = await getAndDecompressGGUFChunks(device, this.progress.bind(this));
