@@ -524,11 +524,11 @@ document.addEventListener("alpine:init", () => {
           console.log(`error: ${error}\nFailed to launch WebGPU. Loading WASM model instead...`); // return;
         }
       }
-      const storageEstimate = await navigator.storage.estimate();
+      const storage = await navigator.storage.estimate();
       try {
         var maxGpuBuffer = device.limits.maxBufferSize;
       } catch (error) {var maxGpuBuffer = null;}
-      this.progress(0,100, `avail storage: ${storageEstimate}, maxgpubuffer: ${maxGpuBuffer}`);
+      this.progress(0,100, `avail storage: ${storage.quota}, used: ${storage.usage}, maxgpubuffer: ${maxGpuBuffer}`);
       return;
 
       try {
