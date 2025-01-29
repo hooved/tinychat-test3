@@ -591,18 +591,22 @@ async function testGPUAllocation(size, device) {
     }
 }
 
-    let s = 128;
-    await testGPUAllocation(s, device);
-    this.progress(0,100, `${s} MB allocated to gpu`);
-    s = 256;
-    await testGPUAllocation(s, device);
-    this.progress(0,100, `${s} MB allocated to gpu`);
-    s = 512;
-    await testGPUAllocation(s, device);
-    this.progress(0,100, `${s} MB allocated to gpu`);
-    s = 1024;
-    await testGPUAllocation(s, device);
-    this.progress(0,100, `${s} MB allocated to gpu`);
+function blockThread(milliseconds) {
+  const start = Date.now();
+  while (Date.now() - start < milliseconds) {
+    // Busy-wait (do nothing)
+  }
+}
+
+    let tot = 0;
+    let allocs = [128, 256, 512, 1024, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256];
+    for (const s of allocs) {
+      blockThread(500);
+      await testGPUAllocation(s, device);
+      tot += s;
+      this.progress(0,100, `${tot} MB allocated to gpu`);
+      
+    }
 
       return;
 
