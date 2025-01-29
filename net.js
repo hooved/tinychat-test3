@@ -22,8 +22,6 @@ const r_4_8_16_28start_pos2B129_4 = `fn nan() -> f32 { let bits = 0xffffffffu; r
 
 */
 
-    window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/resolve/main";
-
   const getTensorBuffer = (safetensorParts, t) => {return safetensorParts[t.chunk].subarray(t.start_pos, t.start_pos + t.size)}
 
   const createEmptyBuf = (device, size) => {
@@ -1469,7 +1467,8 @@ var<workgroup> temp0: array<i32, 256>;
     const buf_241 = createWeightBuf(device, 67108864, getTensorBuffer(safetensor, metadata['layers.15.feed_forward.w2.weight']));
     const buf_242 = createWeightBuf(device, 8192, getTensorBuffer(safetensor, metadata['norm.weight']));
     const buf_243 = createEmptyBuf(device, 513024);;
-    const buf_244 = createWeightBuf(device, 1050673152, getTensorBuffer(safetensor, metadata['output.weight']));
+    //const buf_244 = createWeightBuf(device, 1050673152, getTensorBuffer(safetensor, metadata['output.weight']));
+    const buf_244 = buf_2;
     const buf_245 = createEmptyBuf(device, 1024);;
     const buf_246 = createEmptyBuf(device, 4);;
     const buf_247 = createEmptyBuf(device, 513024);;
