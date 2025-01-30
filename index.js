@@ -626,6 +626,17 @@ document.addEventListener("alpine:init", () => {
         this.progress(0,100, `${size * bufs.length} MB allocated in browser, done allocating`);
         return;
       }
+      else if (window.TEST === "MAXBUF") {
+        const maxSize = 2048;
+        for (let size = 0; size <= maxSize; size += 64) {
+          const sizeBytes = size * 1024 * 1024;
+          const buffer = new Uint8Array(sizeBytes);
+          buffer.fill(255);
+          this.progress(0,100, `${size} MB buffer allocated`);
+          await new Promise(resolve => setTimeout(resolve, 0));
+          blockThread(300);
+        }
+      }
 
       try {
         var tensorData = await getAndDecompressGGUFChunks(device, this.progress.bind(this));
