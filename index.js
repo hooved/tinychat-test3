@@ -611,15 +611,19 @@ document.addEventListener("alpine:init", () => {
         return;
       }
       else if (window.TEST === "BROWSER_MEMORY") {
-        const largest = 4096;
-        for (let size = 8; size <= largest; size += 8) {
-          let sizeBytes = 8 * 1024 * 1024;
-          let buffer = new Uint8Array(sizeBytes);
-          this.progress(0,100, `${size} MB allocated in browser`);
-          await new Promise(resolve => setTimeout(resolve, 0)); // prevent browser lag
-          blockThread(500);
+        const num_allocs = 1000;
+        const bufs = [];
+        const size = 8;
+        const sizeBytes = size * 1024 * 1024;
+        for (let i = 0; i < num_allocs; i++) {
+          const buffer = new Uint8Array(sizeBytes);
+          buffer.fill(255);
+          bufs.push(buffer);
+          this.progress(0,100, `${size * bufs.length} MB allocated in browser`);
+          await new Promise(resolve => setTimeout(resolve, 0));
+          blockThread(200);
         }
-        this.progress(0,100, `${largest} MB allocated in browser, done allocating`);
+        this.progress(0,100, `${size * bufs.length} MB allocated in browser, done allocating`);
         return;
       }
 
