@@ -636,6 +636,23 @@ document.addEventListener("alpine:init", () => {
           await new Promise(resolve => setTimeout(resolve, 0));
           blockThread(300);
         }
+        return;
+      }
+      else if (window.TEST === "MULTI_BIGBUF") {
+        const size = 512;
+        const sizeBytes = size * 1024 * 1024;
+        const bufs = [];
+        const num_allocs = 10;
+        for (let i = 0; i < num_allocs; i++) {
+          const buffer = new Uint8Array(sizeBytes);
+          buffer.fill(255);
+          bufs.push(buffer);
+          this.progress(0,100, `${bufs.length} x ${size}MB bufs allocated`);
+          await new Promise(resolve => setTimeout(resolve, 0));
+          blockThread(1000);
+        }
+        this.progress(0,100, `${size * bufs.length} MB allocated in browser, done allocating`);
+        return;
       }
 
       try {
