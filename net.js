@@ -1935,7 +1935,8 @@ commandEncoder.copyBufferToBuffer(gpuWriteBuffer1, 0, input1, 0, gpuWriteBuffer1
             const gpuCommands = commandEncoder.finish();
             device.queue.submit([gpuCommands]);
 
-    loadingMessage = `gpuReadBuffer.mapAsync`;
+    const tok = data0[0];
+    loadingMessage = `tok=${tok}; gpuReadBuffer.mapAsync`;
     progress(100,100,loadingMessage);
             await gpuReadBuffer.mapAsync(GPUMapMode.READ);
             const resultBuffer = new Int32Array(gpuReadBuffer.size/4);
