@@ -448,6 +448,7 @@ const load_state_dict = async (device, progress) => {
     completed += 1;
   }
 
+  let waiting = 0;
   while (completed < data.metadata.files.length) {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
@@ -466,6 +467,8 @@ const load_state_dict = async (device, progress) => {
       await loadFileToStateDict(file); // increments completed when done
     }
     await new Promise(resolve => setTimeout(resolve, 200));
+    waiting += 1;
+    if (waiting > 0 && waiting % 25 === 0) progress(totalLoaded, totalSize, `Waiting ${waiting}: ${inProgress}/${completed}/29`)
   }
 
   for (const [k,v] of Object.entries(state_dict)) if (!v.empty) v.bytes.unmap();
@@ -507,6 +510,7 @@ document.addEventListener("alpine:init", () => {
           console.log("WebGPU device initialized");
         } catch (error) {
           this.progress(0, 100, "Failed to launch WebGPU. Loading WASM model instead...");
+          throw new Error(`${error}`);
           window.BACKEND = "WASM";
           console.log(`error: ${error}\nFailed to launch WebGPU. Loading WASM model instead...`); // return;
         }
