@@ -452,6 +452,7 @@ const load_state_dict = async (device, progress) => {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
       inProgress += 1;
+      progress(totalLoaded, totalSize, `Downloading model: ${inProgress}/${completed}/29`)
       const file = downloaded.shift();
       await Promise.all(deletionPromises); // maximize available IndexedDB cache; TODO: should we just await this once outside loop?
       saveTensorToDb(db, file.hash, file.bytes); // Promise, which we currently never await
@@ -459,6 +460,7 @@ const load_state_dict = async (device, progress) => {
     }
     else if (!downloaded.length && cachedFiles.length) {
       inProgress += 1;
+      progress(totalLoaded, totalSize, `Downloading model: ${inProgress}/${completed}/29`)
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
       await loadFileToStateDict(file); // increments completed when done
