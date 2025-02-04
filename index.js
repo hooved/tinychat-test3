@@ -598,6 +598,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async handleSend() {
+      this.loadingMessage="handleSend";
       const el = document.getElementById("input-form");
       const value = el.value.trim();
       if (!value) return;
@@ -671,6 +672,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async handleEnter(event) {
+      this.loadingMessage = "handleEnter";
       // if shift is not pressed
       if (!event.shiftKey) {
         event.preventDefault();
@@ -703,6 +705,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async *openaiChatCompletion(messages) {
+      this.loadingMessage="openaiChatCompletion";
       let tokens = [this.tokenizer.bos_id];
       for (const message of messages) {
         tokens = tokens.concat(this.tokenizer.encodeMessage(message.role, message.content));
@@ -724,6 +727,7 @@ document.addEventListener("alpine:init", () => {
       for (const tok of prefillToks) {
         if (window.BACKEND === "WebGPU") {
           try {
+            this.loadingMessage = `tok = ${tok}`;
             await this.nets["transformer"](new Int32Array([tok]), new Int32Array([startPos]));
           }
           catch (error) {
@@ -737,12 +741,15 @@ document.addEventListener("alpine:init", () => {
 
       let lastTok = tokens[tokens.length - 1];
       while (true) {
-        if (window.BACKEND === "WebGPU") {var tok = await this.nets["transformer"](new Int32Array([lastTok]), new Int32Array([startPos])); tok = tok[0];}
+        if (window.BACKEND === "WebGPU") {
+          this.loadingMessage = `lastTok = ${lastTok}`;
+          var tok = await this.nets["transformer"](new Int32Array([lastTok]), new Int32Array([startPos])); tok = tok[0];
+        }
         else {var tok = await this.nets["transformer"](lastTok, startPos);}
         this.lastSeenToks.push(lastTok); // lets us skip prefilling with these tokens at the next prompt in this chain
         startPos += 1;
         lastTok = tok;
-        if (this.tokenizer.stop_tokens.has(lastTok)) break;
+        if (this.tokenizer.stop_tokens.has(lastTok)) {this.loadingMessage = ""; break;}
         yield new TextDecoder().decode(this.tokenizer.decode([lastTok]));
       }
     },
