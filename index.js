@@ -674,7 +674,12 @@ document.addEventListener("alpine:init", () => {
       // if shift is not pressed
       if (!event.shiftKey) {
         event.preventDefault();
-        await this.handleSend();
+        try{
+          await this.handleSend();
+        } catch (error) {
+          this.loadingMessage = error;
+          throw new Error(error);
+        }
       }
     },
 
