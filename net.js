@@ -1583,7 +1583,8 @@ var<workgroup> temp0: array<i32, 256>;
    const output0 = createEmptyBuf(device, 4);
    const input1 = createUniformBuf(device, 4);
 
-        const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
+        //const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
+        const gpuWriteBuffer0 = device.createBuffer({size:input0.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
     const gpuWriteBuffer1 = device.createBuffer({size:input1.size, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
         const gpuReadBuffer = device.createBuffer({ size: output0.size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
 
@@ -1604,9 +1605,15 @@ var<workgroup> temp0: array<i32, 256>;
 
           loadingMessage = `gpuWriteBuffer0.mapAsync`;
           progress(100,100,loadingMessage);
-            await gpuWriteBuffer0.mapAsync(GPUMapMode.WRITE);
-    new Int32Array(gpuWriteBuffer0.getMappedRange()).set(data0);
-    gpuWriteBuffer0.unmap();
+
+            //await gpuWriteBuffer0.mapAsync(GPUMapMode.WRITE);
+    //new Int32Array(gpuWriteBuffer0.getMappedRange()).set(data0);
+    //gpuWriteBuffer0.unmap();
+    device.queue.writeBuffer(gpuWriteBuffer0, 0, new Uint8Array(data0.buffer));
+
+          loadingMessage = `gpuWriteBuffer0 copy to input0`;
+          progress(100,100,loadingMessage);
+
 commandEncoder.copyBufferToBuffer(gpuWriteBuffer0, 0, input0, 0, gpuWriteBuffer0.size);
     loadingMessage = `gpuWriteBuffer1.mapAsync`;
     progress(100,100,loadingMessage);
