@@ -513,7 +513,7 @@ document.addEventListener("alpine:init", () => {
         try {
           device = await getDevice();
           if (window.TEST) {
-            await runTest(window.TEST, this.progress.bind(this));
+            await runTest(window.TEST, this.progress.bind(this), device);
             return;
           }
           var modelPromise = load_state_dict(device, this.progress.bind(this));

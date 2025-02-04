@@ -65,7 +65,7 @@ async function testGPUAllocation(size, device) {
     }
 }
 
-async function runTest(test, progress) {
+async function runTest(test, progress, device) {
   if (test === "GPU_MEMORY") {
     let tot = 0;
     let allocs = [128, 256, 512, 1024, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256];
