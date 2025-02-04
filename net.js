@@ -7,7 +7,8 @@
   }
 
   const createWeightBuf = (device, size, data) => {
-    const buf = device.createBuffer({ mappedAtCreation: true, size, usage: GPUBufferUsage.STORAGE });
+    //const buf = device.createBuffer({ mappedAtCreation: true, size, usage: GPUBufferUsage.STORAGE });
+    const buf = device.createBuffer({ size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
     data.bytes = buf;
     return buf;
   };
