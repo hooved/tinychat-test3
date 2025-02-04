@@ -516,6 +516,9 @@ document.addEventListener("alpine:init", () => {
       if (window.BACKEND === "WebGPU") {
         try {
           device = await getDevice();
+          device.pushErrorScope("out-of-memory");
+          device.pushErrorScope("internal");
+          device.pushErrorScope("validation");
           if (window.TEST) {
             await runTest(window.TEST, this.progress.bind(this), device);
             return;
