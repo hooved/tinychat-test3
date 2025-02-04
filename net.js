@@ -1610,7 +1610,8 @@ var<workgroup> temp0: array<i32, 256>;
             //await gpuWriteBuffer0.mapAsync(GPUMapMode.WRITE);
     //new Int32Array(gpuWriteBuffer0.getMappedRange()).set(data0);
     //gpuWriteBuffer0.unmap();
-    device.queue.writeBuffer(gpuWriteBuffer0, 0, new Uint8Array(data0.buffer));
+    //device.queue.writeBuffer(gpuWriteBuffer0, 0, new Uint8Array(data0.buffer));
+    device.queue.writeBuffer(gpuWriteBuffer0, 0, data0);
 
           loadingMessage = `gpuWriteBuffer0 copy to input0`;
           progress(100,100,loadingMessage);
@@ -1624,7 +1625,8 @@ commandEncoder.copyBufferToBuffer(gpuWriteBuffer0, 0, input0, 0, gpuWriteBuffer0
     //new Int32Array(gpuWriteBuffer1.getMappedRange()).set(data1);
     //gpuWriteBuffer1.unmap();
 
-    device.queue.writeBuffer(gpuWriteBuffer1, 0, new Uint8Array(data1.buffer));
+    //device.queue.writeBuffer(gpuWriteBuffer1, 0, new Uint8Array(data1.buffer));
+    device.queue.writeBuffer(gpuWriteBuffer1, 0, data1);
 commandEncoder.copyBufferToBuffer(gpuWriteBuffer1, 0, input1, 0, gpuWriteBuffer1.size);
 
             addComputePass(device, commandEncoder, piplines[0], [buf_0, buf_1, input0, buf_2], [16, 64, 1]);
@@ -1938,7 +1940,8 @@ commandEncoder.copyBufferToBuffer(gpuWriteBuffer1, 0, input1, 0, gpuWriteBuffer1
     const tok = data0[0];
     loadingMessage = `tok=${tok}; gpuReadBuffer.mapAsync`;
     progress(100,100,loadingMessage);
-            //await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+            await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+            /*
             await gpuReadBuffer.mapAsync(GPUMapMode.READ).catch(err => {
   console.error("Mapping failed:", err);
     loadingMessage = `tok=${tok}; err: ${err}`;
@@ -1951,6 +1954,7 @@ if (error) {
     progress(100,100,loadingMessage);
     throw new Error(error);
 }
+    */
 
 
 
