@@ -717,7 +717,15 @@ document.addEventListener("alpine:init", () => {
       prefillToks = prefillToks.slice(startPos);
 
       for (const tok of prefillToks) {
-        if (window.BACKEND === "WebGPU") {await this.nets["transformer"](new Int32Array([tok]), new Int32Array([startPos]));}
+        if (window.BACKEND === "WebGPU") {
+          try {
+            await this.nets["transformer"](new Int32Array([tok]), new Int32Array([startPos]));
+          }
+          catch (error) {
+            this.loadingMessage = error;
+            throw new Error(error)
+          }
+        }
         else {await this.nets["transformer"](tok, startPos);}
         startPos += 1;
       }
