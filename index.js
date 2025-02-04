@@ -383,6 +383,7 @@ const load_state_dict = async (device, progress) => {
           progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
           const decompBytes = new Uint8Array(out.buffer);
           const unpadded = (decompBytes.length === slice.output_size) ? decompBytes : decompBytes.subarray(0, slice.output_size); // in case we padded
+          p2 += 29;
           new Uint8Array(state_dict[slice.key].bytes.getMappedRange(slice.target_start_pos, slice.output_size)).set(unpadded);
           p2 += 199;
           progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
