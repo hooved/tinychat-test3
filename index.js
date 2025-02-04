@@ -376,12 +376,16 @@ const load_state_dict = async (device, progress) => {
       function scheduleDequantizeJob(slice) {
         return (async () => {
           const decompress = await getFreePipeline(pipelinePool);
-          p2 += 1;
+          p2 += 2;
           progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
           const out = await decompress(slice.bytes); // local arraybuffer
+          p2 += 23;
+          progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
           const decompBytes = new Uint8Array(out.buffer);
           const unpadded = (decompBytes.length === slice.output_size) ? decompBytes : decompBytes.subarray(0, slice.output_size); // in case we padded
           new Uint8Array(state_dict[slice.key].bytes.getMappedRange(slice.target_start_pos, slice.output_size)).set(unpadded);
+          p2 += 199;
+          progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
           releasePipeline(decompress, pipelinePool);
         })();
       }
@@ -442,7 +446,7 @@ const load_state_dict = async (device, progress) => {
       part.bytes = (part.size === file.bytes.length) ? file.bytes : file.bytes.slice(part.file_start_pos, part.file_start_pos + part.size);
       if (part.dtype === "Q6_K") await decompressToStateDict(part, state_dict, pipelinePool, device, progress); // TODO: move this function def within this scope
       else if (valid_final_dtypes.has(part.dtype)) {
-        p2 += 1;
+        p2 += 1000;
         progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
         new Uint8Array(state_dict[part.key].bytes.getMappedRange(part.target_start_pos, part.bytes.length)).set(part.bytes);
       }
@@ -457,7 +461,7 @@ const load_state_dict = async (device, progress) => {
   while (completed < data.metadata.files.length) {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
-      inProgress += 1;
+      inProgress += 1000;
       progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
       const file = downloaded.shift();
       await Promise.all(deletionPromises); // maximize available IndexedDB cache; TODO: should we just await this once outside loop?
@@ -465,7 +469,7 @@ const load_state_dict = async (device, progress) => {
       await loadFileToStateDict(file); // increments completed when done
     }
     else if (!downloaded.length && cachedFiles.length) {
-      inProgress += 1;
+      inProgress += 1000;
       progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
