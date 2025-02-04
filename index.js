@@ -224,6 +224,7 @@ function sendMessageToWorker(worker, message) {
 
 const load_state_dict = async (device, progress) => {
   let completed = 0;
+  let inProgress = 0;
   let totalLoaded = 0;
   let totalSize = 0;
   let partSize = {};
@@ -251,7 +252,7 @@ const load_state_dict = async (device, progress) => {
               for (;;) {
                   const { done, value } = await reader.read();
                   if (done) break;
-                  progressCallback(part, value.byteLength, total, `Downloading model: ${completed}/29`);
+                  progressCallback(part, value.byteLength, total, `Downloading model: ${inProgress}/${completed}/29`);
                   controller.enqueue(value);
               }
                     
@@ -276,7 +277,7 @@ const load_state_dict = async (device, progress) => {
       console.log(`Cache hit: ${filename}, hash: ${hash}`);
       totalLoaded += part.content.byteLength;
       totalSize += part.content.byteLength;
-      progress(totalLoaded, totalSize, `Downloading model: ${completed}/29`)
+      progress(totalLoaded, totalSize, `Downloading model: ${inProgress}/${completed}/29`)
       return Promise.resolve(part.content);
     } else {
       console.log(`Cache miss: ${filename}, hash: ${hash}`);
@@ -450,12 +451,14 @@ const load_state_dict = async (device, progress) => {
   while (completed < data.metadata.files.length) {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
+      inProgress += 1;
       const file = downloaded.shift();
       await Promise.all(deletionPromises); // maximize available IndexedDB cache; TODO: should we just await this once outside loop?
       saveTensorToDb(db, file.hash, file.bytes); // Promise, which we currently never await
       await loadFileToStateDict(file); // increments completed when done
     }
     else if (!downloaded.length && cachedFiles.length) {
+      inProgress += 1;
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
       await loadFileToStateDict(file); // increments completed when done
