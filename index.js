@@ -225,6 +225,7 @@ function sendMessageToWorker(worker, message) {
 const load_state_dict = async (device, progress) => {
   let completed = 0;
   let inProgress = 0;
+  let p2 = 0;
   let totalLoaded = 0;
   let totalSize = 0;
   let partSize = {};
@@ -252,7 +253,7 @@ const load_state_dict = async (device, progress) => {
               for (;;) {
                   const { done, value } = await reader.read();
                   if (done) break;
-                  progressCallback(part, value.byteLength, total, `Downloading model: ${inProgress}/${completed}/29`);
+                  progressCallback(part, value.byteLength, total, `Downloading model: ${inProgress}/${p2}/${completed}/29`);
                   controller.enqueue(value);
               }
                     
@@ -277,7 +278,7 @@ const load_state_dict = async (device, progress) => {
       console.log(`Cache hit: ${filename}, hash: ${hash}`);
       totalLoaded += part.content.byteLength;
       totalSize += part.content.byteLength;
-      progress(totalLoaded, totalSize, `Downloading model: ${inProgress}/${completed}/29`)
+      progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`)
       return Promise.resolve(part.content);
     } else {
       console.log(`Cache miss: ${filename}, hash: ${hash}`);
@@ -375,6 +376,8 @@ const load_state_dict = async (device, progress) => {
       function scheduleDequantizeJob(slice) {
         return (async () => {
           const decompress = await getFreePipeline(pipelinePool);
+          p2 += 1;
+          progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
           const out = await decompress(slice.bytes); // local arraybuffer
           const decompBytes = new Uint8Array(out.buffer);
           const unpadded = (decompBytes.length === slice.output_size) ? decompBytes : decompBytes.subarray(0, slice.output_size); // in case we padded
@@ -439,6 +442,8 @@ const load_state_dict = async (device, progress) => {
       part.bytes = (part.size === file.bytes.length) ? file.bytes : file.bytes.slice(part.file_start_pos, part.file_start_pos + part.size);
       if (part.dtype === "Q6_K") await decompressToStateDict(part, state_dict, pipelinePool, device, progress); // TODO: move this function def within this scope
       else if (valid_final_dtypes.has(part.dtype)) {
+        p2 += 1;
+        progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
         new Uint8Array(state_dict[part.key].bytes.getMappedRange(part.target_start_pos, part.bytes.length)).set(part.bytes);
       }
       else throw new Error(`unexpected dtype: ${part.dtype} in file: ${file.name}`);
@@ -453,7 +458,7 @@ const load_state_dict = async (device, progress) => {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
       inProgress += 1;
-      progress(totalLoaded, totalSize, `Downloading model: ${inProgress}/${completed}/29`)
+      progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
       const file = downloaded.shift();
       await Promise.all(deletionPromises); // maximize available IndexedDB cache; TODO: should we just await this once outside loop?
       saveTensorToDb(db, file.hash, file.bytes); // Promise, which we currently never await
@@ -461,14 +466,14 @@ const load_state_dict = async (device, progress) => {
     }
     else if (!downloaded.length && cachedFiles.length) {
       inProgress += 1;
-      progress(totalLoaded, totalSize, `Downloading model: ${inProgress}/${completed}/29`)
+      progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
       await loadFileToStateDict(file); // increments completed when done
     }
     await new Promise(resolve => setTimeout(resolve, 200));
     waiting += 1;
-    if (waiting > 0 && waiting % 25 === 0) progress(totalLoaded, totalSize, `Waiting ${waiting}: ${inProgress}/${completed}/29`)
+    if (waiting > 0 && waiting % 25 === 0) progress(totalLoaded, totalSize, `Waiting ${waiting}: ${inProgress}/${completed}/29`);
   }
 
   for (const [k,v] of Object.entries(state_dict)) if (!v.empty) v.bytes.unmap();
