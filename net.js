@@ -1599,13 +1599,17 @@ var<workgroup> temp0: array<i32, 256>;
           if (i / kernels.length > 0.66) {progress(93, 100, "Launching WebGPU model:");}
         }
 
-        return async (data0,data1) => {
+        return async (data0,data1,progress) => {
             const commandEncoder = device.createCommandEncoder();
 
+          this.loadingMessage = `gpuWriteBuffer0.mapAsync`;
+          this.progress(100,100,this.loadingMessage);
             await gpuWriteBuffer0.mapAsync(GPUMapMode.WRITE);
     new Int32Array(gpuWriteBuffer0.getMappedRange()).set(data0);
     gpuWriteBuffer0.unmap();
 commandEncoder.copyBufferToBuffer(gpuWriteBuffer0, 0, input0, 0, gpuWriteBuffer0.size);
+    this.loadingMessage = `gpuWriteBuffer1.mapAsync`;
+    this.progress(100,100,this.loadingMessage);
     await gpuWriteBuffer1.mapAsync(GPUMapMode.WRITE);
     new Int32Array(gpuWriteBuffer1.getMappedRange()).set(data1);
     gpuWriteBuffer1.unmap();
@@ -1919,6 +1923,8 @@ commandEncoder.copyBufferToBuffer(gpuWriteBuffer1, 0, input1, 0, gpuWriteBuffer1
             const gpuCommands = commandEncoder.finish();
             device.queue.submit([gpuCommands]);
 
+    this.loadingMessage = `gpuReadBuffer.mapAsync`;
+    this.progress(100,100,this.loadingMessage);
             await gpuReadBuffer.mapAsync(GPUMapMode.READ);
             const resultBuffer = new Int32Array(gpuReadBuffer.size/4);
             resultBuffer.set(new Int32Array(gpuReadBuffer.getMappedRange()));

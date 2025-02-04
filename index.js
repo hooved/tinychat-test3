@@ -599,6 +599,7 @@ document.addEventListener("alpine:init", () => {
 
     async handleSend() {
       this.loadingMessage="handleSend";
+      this.progress(100,100,this.loadingMessage);
       const el = document.getElementById("input-form");
       const value = el.value.trim();
       if (!value) return;
@@ -673,6 +674,7 @@ document.addEventListener("alpine:init", () => {
 
     async handleEnter(event) {
       this.loadingMessage = "handleEnter";
+      this.progress(100,100,this.loadingMessage);
       // if shift is not pressed
       if (!event.shiftKey) {
         event.preventDefault();
@@ -680,6 +682,7 @@ document.addEventListener("alpine:init", () => {
           await this.handleSend();
         } catch (error) {
           this.loadingMessage = error;
+          this.progress(100,100,this.loadingMessage);
           throw new Error(error);
         }
       }
@@ -706,6 +709,7 @@ document.addEventListener("alpine:init", () => {
 
     async *openaiChatCompletion(messages) {
       this.loadingMessage="openaiChatCompletion";
+      this.progress(100,100,this.loadingMessage);
       let tokens = [this.tokenizer.bos_id];
       for (const message of messages) {
         tokens = tokens.concat(this.tokenizer.encodeMessage(message.role, message.content));
@@ -728,10 +732,12 @@ document.addEventListener("alpine:init", () => {
         if (window.BACKEND === "WebGPU") {
           try {
             this.loadingMessage = `tok = ${tok}`;
-            await this.nets["transformer"](new Int32Array([tok]), new Int32Array([startPos]));
+            this.progress(100,100,this.loadingMessage);
+            await this.nets["transformer"](new Int32Array([tok]), new Int32Array([startPos]), this.progress.bind(this));
           }
           catch (error) {
             this.loadingMessage = error;
+            this.progress(100,100,this.loadingMessage);
             throw new Error(error)
           }
         }
@@ -743,7 +749,8 @@ document.addEventListener("alpine:init", () => {
       while (true) {
         if (window.BACKEND === "WebGPU") {
           this.loadingMessage = `lastTok = ${lastTok}`;
-          var tok = await this.nets["transformer"](new Int32Array([lastTok]), new Int32Array([startPos])); tok = tok[0];
+          this.progress(100,100,this.loadingMessage);
+          var tok = await this.nets["transformer"](new Int32Array([lastTok]), new Int32Array([startPos]), this.progress.bind(this)); tok = tok[0];
         }
         else {var tok = await this.nets["transformer"](lastTok, startPos);}
         this.lastSeenToks.push(lastTok); // lets us skip prefilling with these tokens at the next prompt in this chain
