@@ -340,7 +340,7 @@ const load_state_dict = async (device, progress) => {
 
   if (window.BACKEND === "WebGPU") {
     delete state_dict["output.weight"]; // uses same data as tok_embeddings.weight, TODO: make consistent with wasm loading
-    const num_decompressers = 8;
+    const num_decompressers = 1;
     // decompression time goes from 15sec to 10sec by scheduling GPU jobs like below, with Q6_K quantized llama-3.2-1B
     // TODO: can we get tinygrad to give us bigger kernels? currently throws exceptions when trying to compile them
     var pipelinePool = await Promise.all(
@@ -461,7 +461,7 @@ const load_state_dict = async (device, progress) => {
   while (completed < data.metadata.files.length) {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
-      inProgress += 1000;
+      inProgress += 1;
       progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
       const file = downloaded.shift();
       await Promise.all(deletionPromises); // maximize available IndexedDB cache; TODO: should we just await this once outside loop?
@@ -469,7 +469,7 @@ const load_state_dict = async (device, progress) => {
       await loadFileToStateDict(file); // increments completed when done
     }
     else if (!downloaded.length && cachedFiles.length) {
-      inProgress += 1000;
+      inProgress += 1;
       progress(totalLoaded, totalSize,`Downloading model: ${inProgress}/${p2}/${completed}/29`);
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
