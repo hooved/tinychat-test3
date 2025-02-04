@@ -311,7 +311,7 @@ const load_state_dict = async (device, progress) => {
   // to limit memory overhead, we pause downloads if we have this number of downloaded files waiting to be processed
   const numDownloaders = 5; // TODO: dynamically base this on DL file size?
   const chainDownload = async (file) => {
-    loadPart(file.name, progressCallback) // triggers download
+    loadPart(`${window.MODEL_BASE_URL}/${file.name}`, progressCallback) // triggers download
     .then(async (arraybuf) => { 
       downloaded.push({ ...file, bytes: new Uint8Array(arraybuf)});
       // pause downloads if further processing is a bottleneck
