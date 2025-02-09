@@ -21,6 +21,8 @@ async function loadStateDict(event) {
   else {
     const part = event.data;
     for (const [wasm_idx, wasm_offset] of part.wasm_offsets) {
+      self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
+      /*
       if (part.isMobile) {
         pages_per_load = 10;
         //pages_per_pause = 10;
@@ -33,6 +35,7 @@ async function loadStateDict(event) {
       else {
         self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
       }
+        */
     }
   }
   self.postMessage("success");

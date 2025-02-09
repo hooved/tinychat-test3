@@ -326,12 +326,12 @@ async function load_state_dict (data, device, progress) {
     if (downloaded.length) {
       const file = downloaded.shift();
       await saveTensorToDb(db, file.hash, file.bytes); // prevent race between indexedDB and wasm
-      await loadFileToStateDict(file); // increments completed when done
+      //await loadFileToStateDict(file); // increments completed when done
     }
     else if (!downloaded.length && cachedFiles.length) {
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
-      await loadFileToStateDict(file); // increments completed when done
+      //await loadFileToStateDict(file); // increments completed when done
     }
     await new Promise(resolve => setTimeout(resolve, loadDelay));
   }
