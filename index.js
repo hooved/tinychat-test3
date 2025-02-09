@@ -319,22 +319,20 @@ async function load_state_dict (data, device, progress) {
     completed += 1;
   }
 
+  const dummy = [];
   const loadDelay = window.isMobile ? 100 : 20 // hoping to improve stability on mobile
   await Promise.all(deletionPromises);
-  const dummy = [];
   while (completed < data.metadata.files.length) {
     // prioritize files from downloaded queue, so we can continue downloading more files
     if (downloaded.length) {
       const file = downloaded.shift();
       await saveTensorToDb(db, file.hash, file.bytes); // prevent race between indexedDB and wasm
-      dummy.push(file);
-      //await loadFileToStateDict(file); // increments completed when done
+      await loadFileToStateDict(file); // increments completed when done
     }
     else if (!downloaded.length && cachedFiles.length) {
       const file = cachedFiles.shift();
       file.bytes = await getPart(file.name, file.hash); // reads data from IndexedDB
-      dummy.push(file);
-      //await loadFileToStateDict(file); // increments completed when done
+      await loadFileToStateDict(file); // increments completed when done
     }
     await new Promise(resolve => setTimeout(resolve, loadDelay));
   }
@@ -406,12 +404,14 @@ document.addEventListener("alpine:init", () => {
 
       try {
         const model = await load_state_dict(data, device, this.progress);
+        this.progress(-1, "finished load_state_dict");
 
         if (window.BACKEND === "WebGPU") {
           this.nets = {"transformer": model};
         }
         else if (window.BACKEND === "WASM") {
           const msg = await sendMessageToWorker(model, {header: "load_part", data: "done"});
+          this.progress(-1, "worker setup");
           this.nets = {"transformer": async (tok, start_pos) => sendMessageToWorker(model, {header: "token", data: [tok, start_pos]})};
         }
         this.progress(0.01 * totalSize, `Launching ${window.BACKEND} model:`);
