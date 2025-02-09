@@ -301,6 +301,7 @@ async function load_state_dict (data, device, progress) {
     for (const part of file.parts) {
       if (part.empty) continue;
       part.bytes = (part.size === file.bytes.length) ? file.bytes : file.bytes.slice(part.file_start_pos, part.file_start_pos + part.size);
+      part.isMobile = window.isMobile; // necessary for worker context
       if (valid_final_dtypes.has(part.dtype)) {
         if (window.BACKEND === "WebGPU") {
           device.queue.writeBuffer(state_dict[part.key].bytes, part.target_start_pos, part.bytes); // improves stability over mappedAtCreation writing
