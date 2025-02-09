@@ -13,7 +13,7 @@ async function initStateDict(event) {
   delete self.model.state_dict;
 }
 
-function loadStateDict(event) {
+async function loadStateDict(event) {
   if (event.data === "done") {
     self.addEventListener("message", inference);
     self.removeEventListener("message", loadStateDict);
@@ -24,6 +24,7 @@ function loadStateDict(event) {
     const part = event.data;
     for (const [wasm_idx, wasm_offset] of part.wasm_offsets) {
       self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       /*
       if (part.isMobile) {
         pages_per_load = 10;
