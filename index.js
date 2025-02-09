@@ -319,7 +319,6 @@ async function load_state_dict (data, device, progress) {
     completed += 1;
   }
 
-  const dummy = [];
   const loadDelay = window.isMobile ? 100 : 20 // hoping to improve stability on mobile
   await Promise.all(deletionPromises);
   while (completed < data.metadata.files.length) {

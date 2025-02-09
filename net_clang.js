@@ -56,9 +56,9 @@ var transformer = async function(state_dict) {
       let wasm_in = ptrs[0][0];
       let wasm_out = ptrs[0][1];
       wasm[0].HEAPU8.set(input0, wasm_in);
-      console.log(`wasm_in ${wasm_in}`);
-      console.log(`wasm_out ${wasm_out}`);
-      console.log(wasm[0])
+      //console.log(`wasm_in ${wasm_in}`);
+      //console.log(`wasm_out ${wasm_out}`);
+      //console.log(wasm[0])
       wasm[0]._net0(wasm_out, wasm_in);
       //wasm[0]._free(wasm_in);
 
