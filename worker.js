@@ -13,7 +13,7 @@ async function initStateDict(event) {
   delete self.model.state_dict;
 }
 
-async function loadStateDict(event) {
+function loadStateDict(event) {
   if (event.data === "done") {
     self.addEventListener("message", inference);
     self.removeEventListener("message", loadStateDict);
