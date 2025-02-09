@@ -24,7 +24,7 @@ async function loadStateDict(event) {
     const part = event.data;
     for (const [wasm_idx, wasm_offset] of part.wasm_offsets) {
       self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       /*
       if (part.isMobile) {
         pages_per_load = 10;

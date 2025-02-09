@@ -309,6 +309,7 @@ async function load_state_dict (data, device, progress) {
         else if (window.BACKEND === "WASM") {
           const wasm_offsets = state_dict[part.key].wasm_offsets;
           part.wasm_offsets = Object.entries(wasm_offsets).map(([wasm_idx, offset]) => [parseInt(wasm_idx), offset + part.target_start_pos]);
+          progress(-1, `${part.key}`);
           const msg = await sendMessageToWorker(model, {header: "load_part", data: part});
         }
       }
