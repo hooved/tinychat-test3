@@ -23,7 +23,7 @@ async function loadStateDict(event) {
     for (const [wasm_idx, wasm_offset] of part.wasm_offsets) {
       if (part.isMobile) {
         pages_per_load = 10;
-        pages_per_pause = 50;
+        pages_per_pause = 10;
         for (let i=0; i<part.bytes.length; i += (pages_per_load * 65536)) { // wasm page size
           const end = Math.min(part.bytes.length, i + (pages_per_load * 65536))
           self.model.wasm[wasm_idx].HEAPU8.set(part.bytes.slice(i, i + end), wasm_offset + i);
