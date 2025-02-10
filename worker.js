@@ -13,32 +13,29 @@ async function initStateDict(event) {
   delete self.model.state_dict;
 }
 
-async function loadStateDict(event) {
+function loadStateDict(event) {
   if (event.data === "done") {
     self.addEventListener("message", inference);
     self.removeEventListener("message", loadStateDict);
   }
   else {
-    //self.postMessage("success");
-    //return;
     const part = event.data;
     for (const [wasm_idx, wasm_offset] of part.wasm_offsets) {
-      self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
-      //await new Promise(resolve => setTimeout(resolve, 50));
-      /*
-      if (part.isMobile) {
-        pages_per_load = 10;
-        //pages_per_pause = 10;
-        for (let i=0; i<part.bytes.length; i += (pages_per_load * 65536)) { // wasm page size
-          const end = Math.min(part.bytes.length, i + (pages_per_load * 65536))
-          self.model.wasm[wasm_idx].HEAPU8.set(part.bytes.slice(i, i + end), wasm_offset + i);
-          //if (i % (pages_per_pause * 65536) === 0) {await new Promise(resolve => setTimeout(resolve));}
-        }
+      //self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
+      const filePath = '/persistent/myData.bin';
+      self.model.wasm[wasm_idx].FS.writeFile(filePath, part.bytes);
+      self.model.wasm[wasm_idx]._load_buf(wasm_offset);
+      if (false) {
+      //if (wasm_idx === 0) {
+        // Suppose instance is your instantiated module (with FS mounted, etc.)
+        const filePath = '/persistent/myData.bin';
+        // Write the binary data into the Emscripten file system.
+        // FS.writeFile can accept a Uint8Array directly.
+        self.model.wasm[0].FS.writeFile(filePath, part.bytes);
+        console.log("write successful");
+        //self.model.wasm[0]._start();
+        //self.model.wasm[0]._asdf();
       }
-      else {
-        self.model.wasm[wasm_idx].HEAPU8.set(part.bytes, wasm_offset);
-      }
-        */
     }
   }
   self.postMessage("success");
