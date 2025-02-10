@@ -33,6 +33,7 @@ var transformer = async function(state_dict) {
         const bufPtr = wasm[j]._malloc(state_dict[name].size);
         (state_dict[name].wasm_offsets ??= {})[j] = bufPtr;
         wasm[j]._set_buf(i, bufPtr);
+        wasm[j].HEAPU8.fill(0, bufPtr, state_dict[name].size);
       }
     }
   }
