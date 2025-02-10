@@ -19,11 +19,12 @@ async function initStateDict(event) {
   delete self.model.state_dict;
 }
 
-function loadStateDict(event) {
+async function loadStateDict(event) {
   if (event.data === "done") {
     for (const file of files) {
       const ptr = self.model.wasm._malloc(file.bytes.length);
       self.model.wasm.HEAPU8.set(file.bytes, ptr);
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
     self.addEventListener("message", inference);
     self.removeEventListener("message", loadStateDict);
