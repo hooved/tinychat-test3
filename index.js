@@ -1,4 +1,4 @@
-window.TINYCHAT_ROOT = "/tinychat-test/";
+window.TINYCHAT_ROOT = "/tinychat-test3/";
 window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/resolve/main/test3";
 const queryParams = new URLSearchParams(window.location.search);
 const normalizedParams = Object.fromEntries([...queryParams].map(([key, value]) => [key.toUpperCase(), value.toUpperCase()]));
@@ -298,24 +298,19 @@ async function load_state_dict (data, device, progress) {
 
   const valid_final_dtypes = new Set(["float32", "int8", "int32"]);
   const loadFileToStateDict = async(file) => {
-    for (const part of file.parts) {
-      if (part.empty) continue;
-      part.bytes = (part.size === file.bytes.length) ? file.bytes : file.bytes.slice(part.file_start_pos, part.file_start_pos + part.size);
-      part.isMobile = window.isMobile; // necessary for worker context
-      if (valid_final_dtypes.has(part.dtype)) {
-        if (window.BACKEND === "WebGPU") {
-          device.queue.writeBuffer(state_dict[part.key].bytes, part.target_start_pos, part.bytes); // improves stability over mappedAtCreation writing
-        }
-        else if (window.BACKEND === "WASM") {
-          const wasm_offsets = state_dict[part.key].wasm_offsets;
-          part.wasm_offsets = Object.entries(wasm_offsets).map(([wasm_idx, offset]) => [parseInt(wasm_idx), offset + part.target_start_pos]);
-          progress(-1, `${part.key}`);
-          const msg = await sendMessageToWorker(model, {header: "load_part", data: part});
-        }
+    if (window.BACKEND === "WebGPU") {
+      for (const part of file.parts) {
+        if (part.empty) continue;
+        part.bytes = (part.size === file.bytes.length) ? file.bytes : file.bytes.slice(part.file_start_pos, part.file_start_pos + part.size);
+        device.queue.writeBuffer(state_dict[part.key].bytes, part.target_start_pos, part.bytes); // improves stability over mappedAtCreation writing
+        part.bytes = null;
       }
-      else throw new Error(`unexpected dtype: ${part.dtype} in file: ${file.name}`);
-      part.bytes = null;
     }
+    else if (window.BACKEND === "WASM") {
+      //part.target_start_pos = state_dict[part.key].wasm_buf_start_pos + part.target_start_pos
+      const msg = await sendMessageToWorker(model, {header: "load_part", data: file});
+    }
+    else throw new Error(`unexpected dtype: ${part.dtype} in file: ${file.name}`);
     file.bytes = null;
     completed += 1;
   }
@@ -404,14 +399,12 @@ document.addEventListener("alpine:init", () => {
 
       try {
         const model = await load_state_dict(data, device, this.progress);
-        this.progress(-1, "finished load_state_dict");
 
         if (window.BACKEND === "WebGPU") {
           this.nets = {"transformer": model};
         }
         else if (window.BACKEND === "WASM") {
           const msg = await sendMessageToWorker(model, {header: "load_part", data: "done"});
-          this.progress(-1, "worker setup");
           this.nets = {"transformer": async (tok, start_pos) => sendMessageToWorker(model, {header: "token", data: [tok, start_pos]})};
         }
         this.progress(0.01 * totalSize, `Launching ${window.BACKEND} model:`);
