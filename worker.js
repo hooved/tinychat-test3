@@ -21,14 +21,14 @@ async function initStateDict(event) {
 
 async function loadStateDict(event) {
   if (event.data === "done") {
-    //let delay = 100;
+    let delay = 5;
     for (let i=0; i<files.length; i++) {
       const ptr = self.model.wasm._malloc(files[i].bytes.length);
       self.model.wasm.HEAPU8.set(files[i].bytes, ptr);
       files[i].bytes = null;
       //if (i > 25) delay = 150;
-      //await new Promise(resolve => setTimeout(resolve, delay));
-      await new Promise(resolve => setTimeout(resolve));
+      await new Promise(resolve => setTimeout(resolve, delay));
+      //await new Promise(resolve => setTimeout(resolve));
     }
     self.addEventListener("message", inference);
     self.removeEventListener("message", loadStateDict);

@@ -315,7 +315,8 @@ async function load_state_dict (data, device, progress) {
     completed += 1;
   }
 
-  const loadDelay = window.isMobile ? 100 : 20 // hoping to improve stability on mobile
+  //const loadDelay = window.isMobile ? 100 : 20 // hoping to improve stability on mobile
+  const loadDelay = 20;
   await Promise.all(deletionPromises);
   while (completed < data.metadata.files.length) {
     // prioritize files from downloaded queue, so we can continue downloading more files
