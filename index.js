@@ -325,7 +325,7 @@ async function load_state_dict (data, device, progress) {
     completed += 1;
   }
 
-  const loadDelay = window.isMobile ? 100 : 20 // hoping to improve stability on mobile
+  const loadDelay = window.isMobile ? 200 : 20 // hoping to improve stability on mobile
   await Promise.all(deletionPromises);
   while (completed < data.metadata.files.length) {
     const start = performance.now();
