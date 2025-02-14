@@ -284,7 +284,7 @@ async function load_state_dict (data, device, progress) {
 
   const downloaded = [];
   const triggerChainDownload = async (toDownload) => {
-    const numDownloaders = window.isMobile ? 2 : toDownload.length; // TODO: dynamically base this on DL file size? current assumption is 16 MiB chunks
+    const numDownloaders = window.isMobile ? 20 : toDownload.length; // TODO: dynamically base this on DL file size? current assumption is 16 MiB chunks
 
     const chainDownload = async() => {
       const file = toDownload.shift();
