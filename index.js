@@ -1,5 +1,5 @@
-window.TINYCHAT_ROOT = "/tinychat-test3/";
-window.MODEL_BASE_URL= "https://huggingface.co/datasets/hooved/llama-3-2-1B-f32/resolve/main/test3";
+window.TINYCHAT_ROOT = "/";
+window.MODEL_BASE_URL= ".";
 const queryParams = new URLSearchParams(window.location.search);
 const normalizedParams = Object.fromEntries([...queryParams].map(([key, value]) => [key.toUpperCase(), value.toUpperCase()]));
 window.BACKEND = (normalizedParams["BACKEND"] === "WASM") ? "WASM" : "WebGPU";
@@ -324,8 +324,7 @@ async function load_state_dict (data, device, progress) {
     file.bytes = null;
   }
 
-  if (!isMobile || window.BACKEND === "WebGPU") {
-    // ensuring contiguous load is only needed for stability with WASM on mobile
+  if (window.BACKEND === "WebGPU") { // contiguous loading not needed for WebGPU stability
     const files = data.tensor_file_groups.flatMap(obj => obj.files);
     data.tensor_file_groups = [{contiguous: false, files: files}];
   }
@@ -432,7 +431,7 @@ document.addEventListener("alpine:init", () => {
         - fill the malloc'd memory in linear order from start to end (what has been tested is calling wasm.HEAPU8.set on 16 MiB chunks from start to end)
         - use ALLOW_MEMORY_GROWTH=1 in wasm compilation, minimize initial memory
 
-      - additional considerations affecting loading design, for WASM on mobile:
+      - additional considerations affecting loading design, for WASM:
         - it seems that copying bytes into wasm memory cannot be zero-copy without sharedarraybuffer, which isn't currently used due to increased hosting complexity
         - non-zero copies create memory pressure, which is not reliably capped because of lack of control over garbage collection
         - to minimize peak memory pressure if GC is delayed, we process (i.e. download + copy into WASM) large tensors (> 16 MiB) one at a time, in descending size order
