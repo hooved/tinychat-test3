@@ -330,7 +330,7 @@ async function load_state_dict (data, device, progress) {
     const toDownload = files.filter(file => !cachedFileHashes.has(file.hash));
     triggerChainDownload(toDownload);
 
-    const loadDelay = window.isMobile ? 200 : 20 // hoping to improve stability on mobile
+    const loadDelay = window.isMobile ? 5 : 5 // hoping to improve stability on mobile
     await Promise.all(deletionPromises);
 
     while (completed < files.length) {
@@ -354,7 +354,7 @@ async function load_state_dict (data, device, progress) {
         completed += 1;
       }
       const end = performance.now();
-      const elapsed = (end - start) / 1000;
+      const elapsed = (end - start);
       if (elapsed < loadDelay) await new Promise(resolve => setTimeout(resolve, loadDelay - elapsed));
     }
     if (contiguous) {
