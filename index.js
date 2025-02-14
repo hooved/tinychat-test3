@@ -344,7 +344,7 @@ async function load_state_dict (data, device, progress) {
         if (!contiguous) await loadFileToStateDict(file);
         else contiguousFiles.push(file);
         completed += 1;
-        progress(-1, `complete: ${file.name}`);
+        progress(-1, `t: ${file.name}, toD: ${toDownload.length}, D: ${downloaded.length}, c: ${completed}`);
       }
       else if (!downloaded.length && cachedFiles.length) {
         const file = cachedFiles.shift();
