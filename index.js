@@ -338,10 +338,13 @@ async function load_state_dict (data, device, progress) {
       // prioritize files from downloaded queue, so we can continue downloading more files
       if (downloaded.length) {
         const file = downloaded.shift();
+        progress(-1, `saving ${file.name}`);
         await saveTensorToDb(db, file.hash, file.bytes); // for wasm, must await to prevent race between indexedDB and transfer to worker
+        progress(-1, `copyin ${file.name}`);
         if (!contiguous) await loadFileToStateDict(file);
         else contiguousFiles.push(file);
         completed += 1;
+        progress(-1, `complete: ${file.name}`);
       }
       else if (!downloaded.length && cachedFiles.length) {
         const file = cachedFiles.shift();
