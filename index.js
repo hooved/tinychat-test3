@@ -293,7 +293,7 @@ async function load_state_dict (data, device, progress) {
         downloaded.push({ ...file, bytes: new Uint8Array(arraybuf)});
         // pause downloads if further processing is a bottleneck
         while (toDownload.length && downloaded.length >= numDownloaders) await new Promise(resolve => setTimeout(resolve, 200));
-        if (toDownload.length && downloaded.length < numDownloaders) chainDownload(toDownload.shift()); // start next download
+        if (toDownload.length && downloaded.length < numDownloaders) chainDownload(); // start next download
       })
     }
     for (let i=0; i<numDownloaders; i++) if (toDownload.length) chainDownload();
